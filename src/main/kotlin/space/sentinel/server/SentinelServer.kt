@@ -1,31 +1,30 @@
 package space.sentinel.server
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.google.inject.Injector
+import com.typesafe.config.Config
+import dev.misfitlabs.kotlinguice4.getInstance
 import io.netty.channel.ChannelOption
 import reactor.netty.DisposableServer
 import reactor.netty.http.server.HttpServer
 import reactor.netty.http.server.HttpServerRoutes
 import space.sentinel.controller.ActuatorController
 import space.sentinel.controller.NotificationController
-import space.sentinel.service.NotificationService
-import space.sentinel.translator.NotificationTranslator
-import space.sentinel.util.ConfigLoaderFactory
 
+/**
+ * HTTP Server setup
+ */
 class SentinelServer() {
-    fun create(wiring: Wiring): DisposableServer {
-
-        val server = HttpServer.create()
+    fun create(injector: Injector): DisposableServer {
+        return HttpServer.create()
                 .tcpConfiguration { tcpServer ->
                     tcpServer.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                 }
-                .port(wiring.config.getInt("port"))
+                .port(injector.getInstance<Config>().getInt("port"))
                 .wiretap(false)
                 .route { routes: HttpServerRoutes ->
-                    wiring.actuatorController.register(routes)
-                    wiring.notificationController.register(routes)
+                    injector.getInstance<ActuatorController>().register(routes)
+                    injector.getInstance<NotificationController>().register(routes)
                 }
                 .bindNow()
-        return server
     }
 }

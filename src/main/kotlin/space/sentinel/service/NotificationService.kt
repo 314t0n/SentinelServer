@@ -3,7 +3,6 @@ package space.sentinel.service
 import reactor.core.publisher.Mono
 import space.sentinel.api.NotificationRequest
 import space.sentinel.api.NotificationResponse
-import space.sentinel.domain.Notification
 import java.time.OffsetDateTime
 
 class NotificationService() {

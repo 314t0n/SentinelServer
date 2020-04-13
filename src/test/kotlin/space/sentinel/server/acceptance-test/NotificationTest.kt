@@ -1,5 +1,6 @@
 package space.sentinel.server.`acceptance-test`
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import reactor.core.publisher.Flux
 import reactor.netty.ByteBufFlux
@@ -11,7 +12,6 @@ class NotificationTest : AcceptanceTest() {
     @Test
     fun `notification POST should response with OK`() {
         val requestString = objectmapper.writeValueAsString(DomainObjects.ANotificationRequest)
-        val responseString = objectmapper.writeValueAsString(DomainObjects.ANotificationResponse)
 
         val response = client.post()
                 .uri(serverUrl(NotificationController.CONTROLLER_PATH))
@@ -21,7 +21,11 @@ class NotificationTest : AcceptanceTest() {
 
         StepVerifier
                 .create(response)
-                .expectNext(responseString)
+                .expectNextMatches { underTest ->
+                    assertThat(underTest).contains("databaseId")
+                    assertThat(underTest).contains("modified")
+                    true
+                }
                 .expectComplete()
                 .verify()
 

@@ -3,8 +3,6 @@ package space.sentinel.server.`acceptance-test`
 import space.sentinel.api.NotificationRequest
 import space.sentinel.api.NotificationResponse
 import space.sentinel.api.NotificationType
-import space.sentinel.domain.MotionDetectAlert
-import space.sentinel.domain.Notification
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.time.OffsetDateTime
