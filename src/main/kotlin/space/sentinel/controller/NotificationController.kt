@@ -1,5 +1,6 @@
 package space.sentinel.controller
 
+import io.netty.handler.codec.http.HttpResponseStatus
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
@@ -18,18 +19,45 @@ class NotificationController(private val notificationService: NotificationServic
 
     fun register(routes: HttpServerRoutes) {
         routes.post(notificationRoute) { request, response ->
-            request
+
+            val result = request
                     .receive()
+                    .aggregate()
                     .asString()
                     .map { str: String -> translator.translate(str) }
                     .map { notificationService.save(it) }
-                    .map { re: Mono<NotificationResponse> -> translator.translate(re) }
-                    .doOnError{ logger.error("theerror", it)}
-                    .onErrorMap { SentinelError("error") }
-                    .map { response.sendString(it) }
-                    .then()
+                    .flatMap { re: Mono<NotificationResponse> -> translator.translate(re) }
+
+            response.sendString(result).then()
 
         }
     }
+
+//    fun register(routes: HttpServerRoutes) {
+//        routes.post(notificationRoute) { request, response ->
+//
+//            request
+//                    .receive()
+//                    .retain()
+//                    .aggregate()
+//                    .asString()
+//                    .map { str: String -> translator.translate(str) }
+//                    .map { notificationService.save(it) }
+//                    .map { re: Mono<NotificationResponse> -> translator.translate(re) }
+//                    .doOnNext { eze ->
+//                        response.status(200).sendString(eze).then()
+//                    }
+//                    .doOnError { logger.error(it.message, it) }
+//                    .onErrorMap {
+//                        SentinelError("error")
+//                    }
+//                    .doOnNext { eze ->
+//                        response.status(500).then()
+//                    }
+//                    .then()
+////                    .then(response.status(HttpResponseStatus.OK).sendString(Mono.just("Faszom")).then())
+//
+//        }
+//    }
 
 }

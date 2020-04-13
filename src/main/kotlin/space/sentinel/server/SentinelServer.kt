@@ -2,6 +2,7 @@ package space.sentinel.server
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import io.netty.channel.ChannelOption
 import reactor.netty.DisposableServer
 import reactor.netty.http.server.HttpServer
 import reactor.netty.http.server.HttpServerRoutes
@@ -15,6 +16,9 @@ class SentinelServer() {
     fun create(wiring: Wiring): DisposableServer {
 
         val server = HttpServer.create()
+                .tcpConfiguration { tcpServer ->
+                    tcpServer.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+                }
                 .port(wiring.config.getInt("port"))
                 .wiretap(false)
                 .route { routes: HttpServerRoutes ->

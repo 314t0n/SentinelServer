@@ -14,11 +14,12 @@ class NotificationTest : AcceptanceTest() {
         val response = client.post()
                 .uri(serverUrl("notification"))
                 .send(ByteBufFlux.fromString(Flux.just(requestString)))
-                .responseContent()
+                .responseContent().retain().aggregate()
                 .asString()
-                .doOnNext{
+                .doOnEach {
                     println("--------------------")
-                    println(it) }
+                    println(it.get())
+                }
 
         StepVerifier
                 .create(response)
