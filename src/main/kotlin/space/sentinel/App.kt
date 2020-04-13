@@ -1,12 +1,16 @@
 package space.sentinel
 
 import org.slf4j.LoggerFactory
+import space.sentinel.server.SentinelServer
+import space.sentinel.server.Wiring
 
 fun main(args: Array<String>) {
     val logger = LoggerFactory.getLogger("Sentinel")
     try {
-        SentinelApplication()
-                .start("dev")
+        val wiring = Wiring("dev")
+
+        SentinelServer()
+                .create(wiring)
                 .onDispose()
                 .doOnError { e -> logger.error(e.message, e) }
                 .block()

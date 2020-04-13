@@ -27,6 +27,30 @@ dependencies {
     implementation("ch.qos.logback:logback-core:0.9.26")
     implementation("javax.xml.bind:jaxb-api:2.3.0")
     implementation("io.github.config4k:config4k:0.4.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.10.+")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.+")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.10.+")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.10.+")
+    implementation("com.fasterxml.jackson.module:jackson-module-parameter-names:2.10.+")
+    implementation("org.bytedeco:javacv-platform:1.5.2")
+    {
+        //        exclude("org.bytedeco", "openblas")
+//        exclude("org.bytedeco", "opencv")
+//        exclude("org.bytedeco", "ffmpeg")
+        exclude("org.bytedeco", "flycapture")
+        exclude("org.bytedeco", "videoinput")
+        exclude("org.bytedeco", "artoolkitplus")
+        exclude("org.bytedeco", "flandmark")
+        exclude("org.bytedeco", "leptonica")
+        exclude("org.bytedeco", "tesseract")
+        exclude("org.bytedeco", "libfreenect")
+        exclude("org.bytedeco", "libfreenect2")
+        exclude("org.bytedeco", "librealsense")
+        exclude("org.bytedeco", "librealsense2")
+        exclude("org.bytedeco", "libdc1394")
+        exclude("com.google.android", "android")
+    }
+
 
     testImplementation("io.kotlintest:kotlintest-runner-junit5:3.1.9")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
@@ -37,8 +61,17 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.11.1")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.2")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.4.2")
+
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.2")
 }
+
+//tasks.test {
+//    useJUnitPlatform {
+//        includeEngines("junit-vintage")
+//    }
+//}
+
+
 
 repositories {
     jcenter()
