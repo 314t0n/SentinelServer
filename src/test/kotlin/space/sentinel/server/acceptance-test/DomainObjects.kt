@@ -1,5 +1,8 @@
 package space.sentinel.server.`acceptance-test`
 
+import space.sentinel.api.NotificationRequest
+import space.sentinel.api.NotificationResponse
+import space.sentinel.api.NotificationType
 import space.sentinel.domain.MotionDetectAlert
 import space.sentinel.domain.Notification
 import java.io.ByteArrayOutputStream
@@ -12,7 +15,7 @@ import javax.imageio.ImageIO
  * TestMother Object
  */
 class DomainObjects {
-    companion object{
+    companion object {
 
         fun readImage(name: String = "test"): ByteArray {
             val testPng = File("src/test/resources/$name.png")
@@ -23,7 +26,13 @@ class DomainObjects {
         }
 
         val ATimeStamp = OffsetDateTime.now()
-        val AMotionDetectAlert = MotionDetectAlert(ATimeStamp, readImage())
+        val ANotificationRequest = NotificationRequest(
+                ATimeStamp,
+                "id1",
+                "motion detected",
+                NotificationType.ALERT,
+                Optional.of(readImage()))
 
+        val ANotificationResponse = NotificationResponse(ATimeStamp, "dbid1")
     }
 }

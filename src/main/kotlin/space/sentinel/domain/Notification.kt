@@ -13,6 +13,7 @@ open class Notification @JsonCreator constructor(
 
 class Chill  @JsonCreator constructor(@JsonProperty("timestamp") val ts: OffsetDateTime) : Notification(ts, "Chill", Optional.empty())
 
+@Deprecated("replaced with api kojos")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 class MotionDetectAlert  @JsonCreator constructor(
         @JsonProperty("timestamp") val ts: OffsetDateTime,

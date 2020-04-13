@@ -1,17 +1,15 @@
 package space.sentinel.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import reactor.core.publisher.Mono
+import space.sentinel.api.NotificationRequest
+import space.sentinel.api.NotificationResponse
 import space.sentinel.domain.Notification
-import space.sentinel.translator.NotificationTranslator
-
-data class NotificationResponse(val message: String)
+import java.time.OffsetDateTime
 
 class NotificationService() {
 
-    fun save(notification: Mono<Notification>): Mono<NotificationResponse> {
-        return Mono.just(NotificationResponse("everything ok"))
+    fun save(notification: Mono<NotificationRequest>): Mono<NotificationResponse> {
+        return Mono.just(NotificationResponse(databaseId = "dbid1", modified = OffsetDateTime.now()))
     }
 
 }
