@@ -33,6 +33,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.10.+")
     implementation("com.fasterxml.jackson.module:jackson-module-parameter-names:2.10.+")
     implementation("dev.misfitlabs.kotlinguice4:kotlin-guice:1.4.1")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.0.2.RELEASE")
     implementation("org.bytedeco:javacv-platform:1.5.2")
     {
         //        exclude("org.bytedeco", "openblas")
