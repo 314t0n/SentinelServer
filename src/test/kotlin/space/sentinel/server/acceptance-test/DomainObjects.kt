@@ -27,6 +27,7 @@ class DomainObjects {
         val ANotificationRequest = NotificationRequest(
                 ATimeStamp,
                 "id1",
+                "rpi_room",
                 "motion detected",
                 NotificationType.ALERT,
                 Optional.of(readImage()))

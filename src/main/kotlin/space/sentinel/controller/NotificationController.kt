@@ -2,10 +2,8 @@ package space.sentinel.controller
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.google.inject.Inject
-import io.netty.handler.codec.http.HttpResponseStatus
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import reactor.core.publisher.Mono
 import reactor.netty.http.server.HttpServerRoutes
 import space.sentinel.api.ServerErrorResponse
 import space.sentinel.service.NotificationService
@@ -19,8 +17,6 @@ class NotificationController @Inject constructor(private val notificationService
     fun register(routes: HttpServerRoutes) {
         routes.post("/$CONTROLLER_PATH") { request, response ->
 
-            val fsz = Mono.just<String>("gec")
-
             val result = request
                     .receive()
                     .aggregate()
@@ -28,10 +24,13 @@ class NotificationController @Inject constructor(private val notificationService
                     .map(translator::translateRequest)
                     .map(notificationService::save)
                     .flatMap(translator::translateResponse)
-                    .onErrorResume(JsonParseException::class.java) {
-                        translator.translateError(ServerErrorResponse(HttpResponseStatus.BAD_REQUEST.code(), it.message.orEmpty()))
-                    }
                     .doOnError { logger.error(it.message, it) }
+                    .onErrorResume(JsonParseException::class.java) {
+                        translator.translateError(ServerErrorResponse.createBadRequest(it))
+                    }
+                    .onErrorResume(Exception::class.java) {
+                        translator.translateError(ServerErrorResponse.createInternalServerError(it))
+                    }
 
             response.sendString(result).then()
         }

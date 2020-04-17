@@ -14,7 +14,7 @@ class NotificationTest : AcceptanceTest() {
     fun `notification POST should response with OK`() {
         val requestString = objectmapper.writeValueAsString(DomainObjects.ANotificationRequest)
 
-        val response = fetch(requestString)
+        val response = fetch(requestString).doOnNext(::println)
 
         StepVerifier
                 .create(response)
@@ -25,7 +25,6 @@ class NotificationTest : AcceptanceTest() {
                 }
                 .expectComplete()
                 .verify()
-
     }
 
     @Test
@@ -42,16 +41,14 @@ class NotificationTest : AcceptanceTest() {
                 }
                 .expectComplete()
                 .verify()
-
     }
 
     private fun fetch(requestString: String): Mono<String> {
-        val response = client.post()
+        return client.post()
                 .uri(serverUrl(NotificationController.CONTROLLER_PATH))
                 .send(ByteBufFlux.fromString(Flux.just(requestString)))
                 .responseContent().retain().aggregate()
                 .asString()
-        return response
     }
 
 }

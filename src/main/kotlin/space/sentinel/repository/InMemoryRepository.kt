@@ -1,8 +1,16 @@
 package space.sentinel.repository
 
-class InMemoryRepository{
+import reactor.core.publisher.Mono
+import space.sentinel.repository.entity.NotificationEntity
 
-    fun save(img: Image){
+class InMemoryRepository {
 
+    fun save(img: ImageEntity, filename: String): ImageEntity {
+        return img
     }
+
+    fun save(notification: NotificationEntity): Mono<NotificationEntity> {
+        return Mono.just(notification)
+    }
+
 }
