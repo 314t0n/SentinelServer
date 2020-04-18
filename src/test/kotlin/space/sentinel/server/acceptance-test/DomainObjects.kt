@@ -24,13 +24,30 @@ class DomainObjects {
         }
 
         val ATimeStamp = OffsetDateTime.now()
-        val ANotificationRequest = NotificationRequest(
+        val AlertNotificationWithImage = NotificationRequest(
                 ATimeStamp,
                 "id1",
                 "rpi_room",
                 "motion detected",
                 NotificationType.ALERT,
                 Optional.of(readImage()))
+
+        val AlertNotificationWithoutImage = NotificationRequest(
+                ATimeStamp,
+                "id1",
+                "rpi_room",
+                "device disconnected",
+                NotificationType.ALERT,
+                Optional.empty())
+
+        val InfoNotification = NotificationRequest(
+                ATimeStamp,
+                "id2",
+                "rpi_door",
+                "initialized",
+                NotificationType.INFO,
+                Optional.empty())
+
 
         val ANotificationResponse = NotificationResponse(ATimeStamp, "dbid1")
     }

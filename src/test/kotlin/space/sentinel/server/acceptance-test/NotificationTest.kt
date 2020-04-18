@@ -11,8 +11,26 @@ import space.sentinel.controller.NotificationController
 class NotificationTest : AcceptanceTest() {
 
     @Test
-    fun `notification POST should response with OK`() {
-        val requestString = objectmapper.writeValueAsString(DomainObjects.ANotificationRequest)
+    fun `ALERT with image POST should response with OK`() {
+        val requestString = objectmapper.writeValueAsString(DomainObjects.AlertNotificationWithImage)
+
+        val response = fetch(requestString).doOnNext(::println)
+
+        StepVerifier
+                .create(response)
+                .expectNextMatches { underTest ->
+                    assertThat(underTest).contains("databaseId")
+                    assertThat(underTest).contains("modified")
+                    true
+                }
+                .expectComplete()
+                .verify()
+    }
+
+
+    @Test
+    fun `ALERT without image POST should response with OK`() {
+        val requestString = objectmapper.writeValueAsString(DomainObjects.AlertNotificationWithoutImage)
 
         val response = fetch(requestString).doOnNext(::println)
 
@@ -28,7 +46,24 @@ class NotificationTest : AcceptanceTest() {
     }
 
     @Test
-    fun `notification POST should response with Bad Request`() {
+    fun `INFO POST should response with OK`() {
+        val requestString = objectmapper.writeValueAsString(DomainObjects.InfoNotification)
+
+        val response = fetch(requestString).doOnNext(::println)
+
+        StepVerifier
+                .create(response)
+                .expectNextMatches { underTest ->
+                    assertThat(underTest).contains("databaseId")
+                    assertThat(underTest).contains("modified")
+                    true
+                }
+                .expectComplete()
+                .verify()
+    }
+
+    @Test
+    fun `Malformed JSON POST should response with Bad Request`() {
         val requestString = "invalid request"
 
         val response = fetch(requestString)
@@ -44,7 +79,9 @@ class NotificationTest : AcceptanceTest() {
     }
 
     private fun fetch(requestString: String): Mono<String> {
-        return client.post()
+        return client
+                .headers { h -> h.set("x-sentinel-api-key", "test") }
+                .post()
                 .uri(serverUrl(NotificationController.CONTROLLER_PATH))
                 .send(ByteBufFlux.fromString(Flux.just(requestString)))
                 .responseContent().retain().aggregate()

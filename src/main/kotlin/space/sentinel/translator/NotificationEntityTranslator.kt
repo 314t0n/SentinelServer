@@ -13,8 +13,8 @@ class NotificationEntityTranslator {
         return ImageEntity(id = request.id, bytes = request.image.get(), date = request.timestamp)
     }
 
-    fun translateToEntity(req: NotificationRequest, maybeFileName: Mono<String>): Mono<NotificationEntity> {
-        return maybeFileName.or(Mono.just("")).map { filename -> translateNotificationEntity(req, filename) }
+    fun translateToEntity(req: NotificationRequest, fileName: Mono<String>): Mono<NotificationEntity> {
+        return fileName.map { filename -> translateNotificationEntity(req, filename) }
     }
 
     private fun translateNotificationEntity(request: NotificationRequest, filename: String): NotificationEntity {
