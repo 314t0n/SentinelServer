@@ -24,7 +24,6 @@ class SentinelServer() {
                 }
                 .port(injector.getInstance<Config>().getInt("port"))
                 .wiretap(false)
-
                 .route { routes: HttpServerRoutes ->
                     injector.getInstance<ActuatorController>().register(routes)
                     injector.getInstance<NotificationController>().register(routes)

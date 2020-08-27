@@ -2,8 +2,10 @@ package space.sentinel.controller
 
 import reactor.core.publisher.Mono
 import reactor.netty.http.server.HttpServerRoutes
+import com.google.inject.Inject
+import space.sentinel.repository.ApiKeyRepository
 
-class ActuatorController() {
+class ActuatorController @Inject constructor(apiKeyRepository: ApiKeyRepository) : SentinelController(apiKeyRepository) {
 
     private val pingRoute = "/ping"
     private val pingResponse = "pong"
