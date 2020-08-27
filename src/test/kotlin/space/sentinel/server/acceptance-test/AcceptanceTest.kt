@@ -15,7 +15,7 @@ open class AcceptanceTest {
 
     protected val injector: Injector = Guice.createInjector(SentinelServerModule())
     protected val server = SentinelServer().create(injector)
-    protected val client = HttpClient.create().headers{ h -> h.set("api-key", "test")}
+    protected val client = HttpClient.create()
     protected val baseUri = "http://${server.host()}:${server.port()}"
     protected val objectmapper = injector.getInstance<ObjectMapper>()
 

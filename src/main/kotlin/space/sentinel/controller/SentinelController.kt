@@ -13,10 +13,14 @@ import java.util.*
 
 abstract class SentinelController @Inject constructor(private val apiKeyRepository: ApiKeyRepository) {
 
+    companion object{
+        const val API_KEY_HEADER = "x-sentinel-api-key"
+    }
+
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
     protected fun withValidApiKey(request: HttpServerRequest, response: HttpServerResponse, requestHandler: () -> Mono<Void>): Publisher<Void> {
-        val apiKey = Optional.ofNullable(request.requestHeaders().get("x-sentinel-api-key"))
+        val apiKey = Optional.ofNullable(request.requestHeaders().get(API_KEY_HEADER))
 
         return if (apiKey.isPresent && apiKeyRepository.isValid(apiKey.get())) {
             requestHandler()

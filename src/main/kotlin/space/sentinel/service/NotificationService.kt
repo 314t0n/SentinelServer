@@ -9,11 +9,16 @@ import space.sentinel.api.NotificationResponse
 import space.sentinel.repository.FileImageRepository
 import space.sentinel.repository.InMemoryCache
 import space.sentinel.repository.entity.NotificationEntity
+import space.sentinel.service.NotificationService.Companion.NoImageFilenameFallback
 import space.sentinel.translator.NotificationEntityTranslator
 
 class NotificationService @Inject constructor(private val fileImageRepository: FileImageRepository,
                                               private val inMemoryCache: InMemoryCache,
                                               private val notificationEntityTranslator: NotificationEntityTranslator) {
+
+    companion object {
+        private val NoImageFilenameFallback = Mono.just("no image")
+    }
 
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -33,10 +38,6 @@ class NotificationService @Inject constructor(private val fileImageRepository: F
             if (request.image.isPresent) {
                 fileImageRepository.save(notificationEntityTranslator.translateToImageEntity(request))
             } else {
-                Companion.NoImageFilenameFallback
+                NoImageFilenameFallback
             }
-
-    companion object {
-        private val NoImageFilenameFallback = Mono.just("no image")
-    }
 }

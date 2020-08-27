@@ -7,6 +7,8 @@ import reactor.core.publisher.Mono
 import reactor.netty.ByteBufFlux
 import reactor.test.StepVerifier
 import space.sentinel.controller.NotificationController
+import space.sentinel.controller.SentinelController
+import space.sentinel.controller.SentinelController.Companion.API_KEY_HEADER
 
 class NotificationTest : AcceptanceTest() {
 
@@ -80,7 +82,7 @@ class NotificationTest : AcceptanceTest() {
     @Test
     fun `Unauthorized with wrong Api Key`() {
         val response = client
-                .headers { h -> h.set("x-sentinel-api-key", "test123").set("Content-type", "application/json") }
+                .headers { h -> h.set(API_KEY_HEADER, "test123").set("Content-type", "application/json") }
                 .post()
                 .uri(serverUrl(NotificationController.CONTROLLER_PATH))
                 .send(ByteBufFlux.fromString(Flux.just(objectmapper.writeValueAsString(DomainObjects.InfoNotification))))
@@ -117,7 +119,7 @@ class NotificationTest : AcceptanceTest() {
 
     private fun fetch(requestString: String): Mono<String> {
         return client
-                .headers { h -> h.set("x-sentinel-api-key", "test").set("Content-type", "application/json") }
+                .headers { h -> h.set(API_KEY_HEADER, "test").set("Content-type", "application/json") }
                 .post()
                 .uri(serverUrl(NotificationController.CONTROLLER_PATH))
                 .send(ByteBufFlux.fromString(Flux.just(requestString)))

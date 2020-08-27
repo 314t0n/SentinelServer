@@ -20,6 +20,10 @@ class NotificationController @Inject constructor(private val notificationService
                                                  private val translator: NotificationTranslator,
                                                  apiKeyRepository: ApiKeyRepository) : SentinelController(apiKeyRepository) {
 
+    companion object {
+        const val CONTROLLER_PATH = "notification"
+    }
+
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun register(routes: HttpServerRoutes) {
@@ -27,7 +31,6 @@ class NotificationController @Inject constructor(private val notificationService
             withValidApiKey(request, response) { post(request, response) }
         }
     }
-
 
     private fun post(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
         val result = request
@@ -50,10 +53,6 @@ class NotificationController @Inject constructor(private val notificationService
                 .header("Content-type", "application/json")
                 .sendString(result)
                 .then()
-    }
-
-    companion object {
-        const val CONTROLLER_PATH = "notification"
     }
 
 }
