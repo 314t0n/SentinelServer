@@ -1,7 +1,7 @@
 package space.sentinel.server.`acceptance-test`
 
-import space.sentinel.api.NotificationRequest
-import space.sentinel.api.NotificationResponse
+import space.sentinel.api.request.NotificationRequest
+import space.sentinel.api.response.NotificationResponse
 import space.sentinel.api.NotificationType
 import java.io.ByteArrayOutputStream
 import java.io.File

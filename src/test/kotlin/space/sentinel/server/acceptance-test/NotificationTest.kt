@@ -7,14 +7,13 @@ import reactor.core.publisher.Mono
 import reactor.netty.ByteBufFlux
 import reactor.test.StepVerifier
 import space.sentinel.controller.NotificationController
-import space.sentinel.controller.SentinelController
 import space.sentinel.controller.SentinelController.Companion.API_KEY_HEADER
 
 class NotificationTest : AcceptanceTest() {
 
     @Test
     fun `ALERT with image POST should response with OK`() {
-        val requestString = objectmapper.writeValueAsString(DomainObjects.AlertNotificationWithImage)
+        val requestString = mapper.writeValueAsString(DomainObjects.AlertNotificationWithImage)
 
         val response = fetch(requestString).doOnNext(::println)
 
@@ -31,7 +30,7 @@ class NotificationTest : AcceptanceTest() {
 
     @Test
     fun `ALERT without image POST should response with OK`() {
-        val requestString = objectmapper.writeValueAsString(DomainObjects.AlertNotificationWithoutImage)
+        val requestString = mapper.writeValueAsString(DomainObjects.AlertNotificationWithoutImage)
 
         val response = fetch(requestString).doOnNext(::println)
 
@@ -48,7 +47,7 @@ class NotificationTest : AcceptanceTest() {
 
     @Test
     fun `INFO POST should response with OK`() {
-        val requestString = objectmapper.writeValueAsString(DomainObjects.InfoNotification)
+        val requestString = mapper.writeValueAsString(DomainObjects.InfoNotification)
 
         val response = fetch(requestString)
 
@@ -85,7 +84,7 @@ class NotificationTest : AcceptanceTest() {
                 .headers { h -> h.set(API_KEY_HEADER, "test123").set("Content-type", "application/json") }
                 .post()
                 .uri(serverUrl(NotificationController.CONTROLLER_PATH))
-                .send(ByteBufFlux.fromString(Flux.just(objectmapper.writeValueAsString(DomainObjects.InfoNotification))))
+                .send(ByteBufFlux.fromString(Flux.just(mapper.writeValueAsString(DomainObjects.InfoNotification))))
                 .response().map { it.status() }
 
         StepVerifier
@@ -104,7 +103,7 @@ class NotificationTest : AcceptanceTest() {
         val response = client
                 .post()
                 .uri(serverUrl(NotificationController.CONTROLLER_PATH))
-                .send(ByteBufFlux.fromString(Flux.just(objectmapper.writeValueAsString(DomainObjects.InfoNotification))))
+                .send(ByteBufFlux.fromString(Flux.just(mapper.writeValueAsString(DomainObjects.InfoNotification))))
                 .response().map { it.status() }
 
         StepVerifier

@@ -2,19 +2,21 @@ package space.sentinel.controller
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.google.inject.Inject
+import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
+import io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON
 import io.netty.handler.codec.http.HttpResponseStatus
-import org.reactivestreams.Publisher
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import reactor.netty.http.server.HttpServerRequest
 import reactor.netty.http.server.HttpServerResponse
 import reactor.netty.http.server.HttpServerRoutes
-import space.sentinel.api.ServerErrorResponse
+import space.sentinel.api.Notifications
+import space.sentinel.api.response.NotificationsResponse
+import space.sentinel.api.response.ServerErrorResponse
 import space.sentinel.repository.ApiKeyRepository
 import space.sentinel.service.NotificationService
 import space.sentinel.translator.NotificationTranslator
-import java.util.*
 
 class NotificationController @Inject constructor(private val notificationService: NotificationService,
                                                  private val translator: NotificationTranslator,
@@ -27,9 +29,28 @@ class NotificationController @Inject constructor(private val notificationService
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun register(routes: HttpServerRoutes) {
-        routes.post("/$CONTROLLER_PATH") { request, response ->
-            withValidApiKey(request, response) { post(request, response) }
-        }
+        routes
+                .post("/$CONTROLLER_PATH") { request, response ->
+                    withValidApiKey(request, response) { post(request, response) }
+                }
+                .get("/$CONTROLLER_PATH") { request, response ->
+                    withValidApiKey(request, response) { get(request, response) }
+                }
+    }
+
+    private fun get(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
+        val notifications = notificationService
+                .getAll()
+                .collectList()
+                .map { Notifications(it) }
+                .map { translator.translate(it)  }
+                .doOnNext(::println)
+
+        return response
+                .status(HttpResponseStatus.OK)
+                .header(CONTENT_TYPE, APPLICATION_JSON)
+                .sendString(notifications)
+                .then()
     }
 
     private fun post(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
@@ -50,7 +71,7 @@ class NotificationController @Inject constructor(private val notificationService
 
         return response
                 .status(HttpResponseStatus.OK)
-                .header("Content-type", "application/json")
+                .header(CONTENT_TYPE, APPLICATION_JSON)
                 .sendString(result)
                 .then()
     }

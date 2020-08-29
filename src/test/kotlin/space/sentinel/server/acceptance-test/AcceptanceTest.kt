@@ -4,11 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.inject.Guice
 import com.google.inject.Injector
 import dev.misfitlabs.kotlinguice4.getInstance
+import org.apache.ibatis.jdbc.ScriptRunner
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import reactor.netty.http.client.HttpClient
 import space.sentinel.server.SentinelServer
 import space.sentinel.server.modules.SentinelServerModule
+import java.io.FileInputStream
+import java.io.InputStreamReader
+import java.sql.Connection
+import java.sql.DriverManager
+import java.sql.ResultSet
+import java.sql.Statement
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 open class AcceptanceTest {
@@ -17,11 +25,26 @@ open class AcceptanceTest {
     protected val server = SentinelServer().create(injector)
     protected val client = HttpClient.create()
     protected val baseUri = "http://${server.host()}:${server.port()}"
-    protected val objectmapper = injector.getInstance<ObjectMapper>()
+    protected val mapper = injector.getInstance<ObjectMapper>()
 
     fun serverUrl(path: String): String {
         return "$baseUri/$path"
     }
+
+    @BeforeAll
+    internal fun setup() {
+        val conn = DriverManager.getConnection("jdbc:mariadb://localhost/", "root", "testelek")
+        val resource = this.javaClass.classLoader.getResource("testdb.sql")
+
+        conn.use {
+            val runner = ScriptRunner(conn)
+            val reader = InputStreamReader(resource!!.openStream())
+            reader.use {
+                runner.runScript(reader)
+            }
+        }
+    }
+
 
     @AfterAll
     internal fun destroy() {

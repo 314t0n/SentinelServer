@@ -34,6 +34,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-parameter-names:2.10.+")
     implementation("dev.misfitlabs.kotlinguice4:kotlin-guice:1.4.1")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.0.2.RELEASE")
+    implementation("org.mariadb.jdbc:mariadb-java-client:2.6.2")
+    implementation("org.mariadb:r2dbc-mariadb:0.8.3-beta1")
     implementation("org.bytedeco:javacv-platform:1.5.2")
     {
         //        exclude("org.bytedeco", "openblas")
@@ -53,7 +55,6 @@ dependencies {
         exclude("com.google.android", "android")
     }
 
-
     testImplementation("io.kotlintest:kotlintest-runner-junit5:3.1.9")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
@@ -63,17 +64,12 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.11.1")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.2")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.4.2")
+    testImplementation("org.mybatis:mybatis:3.5.5")
+    testImplementation("com.jayway.jsonpath:json-path:2.4.0")
+    testImplementation("com.jayway.jsonpath:json-path-assert:2.2.0")
 
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.2")
 }
-
-//tasks.test {
-//    useJUnitPlatform {
-//        includeEngines("junit-vintage")
-//    }
-//}
-
-
 
 repositories {
     jcenter()

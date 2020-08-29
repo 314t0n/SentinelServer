@@ -1,4 +1,4 @@
-package space.sentinel.api
+package space.sentinel.api.response
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
