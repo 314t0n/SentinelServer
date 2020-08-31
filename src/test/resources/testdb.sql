@@ -43,9 +43,14 @@ VALUES (now(), 'TEST_DEVICE', 'test123');
 
 INSERT INTO notification(created, message, device_id, notification_type)
 VALUES
-(now(), 'test message1', 1, 3),
-(now(), 'test message2', 1, 3),
-(now(), 'test message3', 1, 3),
-(now(), 'test message4', 1, 3),
-(now(), 'test message5', 1, 3)
+("2020-08-31 07:00:00", 'test message1', 1, 3),
+("2020-08-31 07:10:00", 'test message2', 1, 3),
+("2020-08-31 07:20:00", 'test message3', 1, 1),
+("2020-08-31 07:30:00", 'test message4', 1, 2),
+("2020-08-31 07:40:00", 'test message5', 1, 3),
+("2020-08-31 07:50:00", 'test message6', 1, 1),
+("2020-08-31 07:55:00", 'test message7', 1, 2),
+("2020-08-31 07:56:00", 'test message8', 1, 3),
+("2020-08-31 07:57:00", 'test message9', 1, 3),
+("2020-08-31 07:58:00", 'test message10', 1, 3)
 ;

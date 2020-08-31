@@ -1,58 +1,38 @@
 package space.sentinel.repository
 
-import io.r2dbc.spi.Row
+import com.google.inject.Inject
+import com.typesafe.config.Config
 import org.mariadb.r2dbc.MariadbConnectionConfiguration
 import org.mariadb.r2dbc.MariadbConnectionFactory
 import reactor.core.publisher.Flux
-import space.sentinel.api.NotificationType
-import space.sentinel.repository.entity.NotificationEntity
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.util.*
+import space.sentinel.api.Notification
+import space.sentinel.translator.NotificationTranslator
 
 
-class NotificationRepository {
+class NotificationRepository @Inject constructor(
+        config: Config,
+        private val notificationTranslator: NotificationTranslator) {
 
-    /**
-     *  Error finishing response. Closing connection
-    io.r2dbc.spi.R2dbcTransientResourceException: No decoder for type java.time.OffsetDateTime and column type TIMESTAMP
-     */
+    private val mariadbConnectionConfiguration = MariadbConnectionConfiguration.builder()
+            .host(config.getString("mariadb.host"))
+            .port(config.getInt("mariadb.port"))
+            .username(config.getString("mariadb.username"))
+            .password(config.getString("mariadb.password"))
+            .database(config.getString("mariadb.database"))
+            .build();
 
-    fun getAll(): Flux<NotificationEntity> {
-        val conf = MariadbConnectionConfiguration.builder()
-                .host("localhost")
-                .port(3306)
-                .username("root")
-                .password("testelek")
-                .database("sentinel")
-                .build();
-        val connectionFactory = MariadbConnectionFactory(conf);
+    private val connectionFactory = MariadbConnectionFactory(mariadbConnectionConfiguration)
+
+    fun getAll(limit: Long, offset: Long): Flux<Notification> {
+        val selectQuery = "SELECT x.* FROM sentinel.notification x ORDER BY x.created DESC LIMIT $limit,$offset" // bind not supported
 
         return Flux.from(connectionFactory.create())
-                .flatMap { c -> c.createStatement("SELECT x.* FROM sentinel.notification x").execute() }
+                .flatMap { c -> c.createStatement(selectQuery).execute() }
                 .flatMap { result ->
                     result.map { row, meta ->
-                        translate(row)
+                        notificationTranslator.translate(row)
                     }
                 }
-    }
-
-    private fun translate(row: Row) = NotificationEntity(
-            id = row.get("id", String::class.java),
-            timestamp = toDateTime(row),
-            deviceId = row.get("device_id", String::class.java),
-            message = row.get("message", String::class.java),
-            filename = "test",
-            type = NotificationType.INFO,
-            image = Optional.empty()
-    )
-
-    private fun toDateTime(row: Row): OffsetDateTime {
-        val ts = row.get("created", String::class.java)
-        val local = LocalDateTime.parse(ts, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        return OffsetDateTime.of(local, ZoneOffset.UTC)
     }
 
 }

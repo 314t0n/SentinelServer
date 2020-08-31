@@ -12,14 +12,15 @@ import reactor.netty.http.server.HttpServerRequest
 import reactor.netty.http.server.HttpServerResponse
 import reactor.netty.http.server.HttpServerRoutes
 import space.sentinel.api.Notifications
-import space.sentinel.api.response.NotificationsResponse
 import space.sentinel.api.response.ServerErrorResponse
 import space.sentinel.repository.ApiKeyRepository
 import space.sentinel.service.NotificationService
 import space.sentinel.translator.NotificationTranslator
+import space.sentinel.util.QueryParameterResolver
 
 class NotificationController @Inject constructor(private val notificationService: NotificationService,
                                                  private val translator: NotificationTranslator,
+                                                 private val queryParameterResolver: QueryParameterResolver,
                                                  apiKeyRepository: ApiKeyRepository) : SentinelController(apiKeyRepository) {
 
     companion object {
@@ -33,17 +34,17 @@ class NotificationController @Inject constructor(private val notificationService
                 .post("/$CONTROLLER_PATH") { request, response ->
                     withValidApiKey(request, response) { post(request, response) }
                 }
-                .get("/$CONTROLLER_PATH") { request, response ->
+                .get("/$CONTROLLER_PATH?page={page}") { request, response ->
                     withValidApiKey(request, response) { get(request, response) }
                 }
     }
 
     private fun get(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
         val notifications = notificationService
-                .getAll()
+                .getAll(queryParameterResolver.parameterMap(request))
                 .collectList()
                 .map { Notifications(it) }
-                .map { translator.translate(it)  }
+                .map { translator.translate(it) }
                 .doOnNext(::println)
 
         return response

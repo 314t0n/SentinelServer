@@ -10,14 +10,15 @@ import org.junit.jupiter.api.Test
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import space.sentinel.controller.NotificationController
+import space.sentinel.controller.NotificationController.Companion.CONTROLLER_PATH
 import space.sentinel.controller.SentinelController.Companion.API_KEY_HEADER
 import space.sentinel.server.`acceptance-test`.AcceptanceTest
 
-class NotificationApiTest : AcceptanceTest() {
+class NotificationReadTest : AcceptanceTest() {
 
     @Test
     fun `GET should return first x element`() {
-        val response = get().doOnEach { println(it) }
+        val response = get()
 
         StepVerifier
                 .create(response)
@@ -25,8 +26,8 @@ class NotificationApiTest : AcceptanceTest() {
 
                     assertThat(json, isJson())
                     assertThat(json, hasJsonPath("$.notifications", hasSize(5)))
-                    assertThat(json, hasJsonPath("$.notifications[0].id", equalTo("1")))
-                    assertThat(json, hasJsonPath("$.notifications[0].message", equalTo("test message1")))
+                    assertThat(json, hasJsonPath("$.notifications[0].id", equalTo("10")))
+                    assertThat(json, hasJsonPath("$.notifications[0].message", equalTo("test message10")))
                     assertThat(json, hasJsonPath("$.notifications[0].device_id", equalTo("1")))
 
                     true
@@ -35,11 +36,29 @@ class NotificationApiTest : AcceptanceTest() {
                 .verify()
     }
 
-    private fun get(): Mono<String> {
+    @Test
+    fun `GET should paginate`() {
+        val response = get("$CONTROLLER_PATH", "?page=2")
+
+        StepVerifier
+                .create(response)
+                .expectNextMatches { json: String ->
+
+                    assertThat(json, isJson())
+                    assertThat(json, hasJsonPath("$.notifications", hasSize(5)))
+                    assertThat(json, hasJsonPath("$.notifications[0].message", equalTo("test message5")))
+
+                    true
+                }
+                .expectComplete()
+                .verify()
+    }
+
+    private fun get(requestUri: String = CONTROLLER_PATH, query: String = ""): Mono<String> {
         return client
                 .headers { h -> h.set(API_KEY_HEADER, "test").set("Content-type", "application/json") }
                 .get()
-                .uri(serverUrl(NotificationController.CONTROLLER_PATH))
+                .uri("""${serverUrl(requestUri)}$query""")
                 .responseContent()
                 .retain().aggregate()
                 .asString()

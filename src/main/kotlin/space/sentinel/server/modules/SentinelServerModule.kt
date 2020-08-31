@@ -10,6 +10,7 @@ import space.sentinel.repository.ApiKeyRepository
 import space.sentinel.service.NotificationService
 import space.sentinel.translator.NotificationEntityTranslator
 import space.sentinel.translator.NotificationTranslator
+import space.sentinel.util.QueryParameterResolver
 
 class SentinelServerModule: KotlinModule(){
 
@@ -20,6 +21,7 @@ class SentinelServerModule: KotlinModule(){
         bind<NotificationEntityTranslator>().`in`<Singleton>()
         bind<NotificationController>().`in`<Singleton>()
         bind<ApiKeyRepository>().`in`<Singleton>()
+        bind<QueryParameterResolver>().`in`<Singleton>()
         bind<ObjectMapper>().toProvider<JacksonObjectMapperProvider>().`in`<Singleton>()
         bind<Config>().toProvider<SentinelConfigProvider>().`in`<Singleton>()
     }
