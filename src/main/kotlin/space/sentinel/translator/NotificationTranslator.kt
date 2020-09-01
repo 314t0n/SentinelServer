@@ -16,14 +16,11 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-class NotificationTranslator @Inject constructor(private val mapper: ObjectMapper) {
+class NotificationTranslator @Inject constructor(private val mapper: ObjectMapper,
+                                                 private val dateTimeTranslator: DateTimeTranslator) {
 
     fun translateRequest(request: String): Mono<NotificationRequest> {
         return Mono.just(mapper.readValue<NotificationRequest>(request))
-    }
-
-    fun translateResponse(response: Mono<NotificationResponse>): Mono<String> {
-        return response.map(mapper::writeValueAsString)
     }
 
     fun translate(response: Notifications): String {
@@ -38,17 +35,11 @@ class NotificationTranslator @Inject constructor(private val mapper: ObjectMappe
 
     fun translate(row: Row) = Notification(
             id = row.get("id", String::class.java),
-            created = toDateTime(row),
+            created = dateTimeTranslator.toDateTime(row),
             deviceId = row.get("device_id", String::class.java),
             message = row.get("message", String::class.java),
             type = NotificationType.INFO.toString(),
             image = ""
     )
-
-    private fun toDateTime(row: Row): OffsetDateTime {
-        val ts = row.get("created", String::class.java)
-        val local = LocalDateTime.parse(ts, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        return OffsetDateTime.of(local, ZoneOffset.UTC)
-    }
 
 }

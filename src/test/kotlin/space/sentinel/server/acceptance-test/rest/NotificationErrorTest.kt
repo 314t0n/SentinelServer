@@ -1,12 +1,10 @@
 package space.sentinel.server.`acceptance-test`.rest
 
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
 import reactor.netty.ByteBufFlux
 import reactor.test.StepVerifier
-import space.sentinel.controller.NotificationController
+import space.sentinel.controller.NotificationController.Companion.CONTROLLER_PATH
 import space.sentinel.controller.SentinelController.Companion.API_KEY_HEADER
 import space.sentinel.server.`acceptance-test`.AcceptanceTest
 import space.sentinel.server.`acceptance-test`.DomainObjects
@@ -17,7 +15,7 @@ class NotificationErrorTest : AcceptanceTest() {
     fun `Malformed JSON POST should response with Bad Request`() {
         val requestString = "invalid request"
 
-        val response = statusCode(requestString)
+        val response = statusCode(requestString, CONTROLLER_PATH)
 
         StepVerifier
                 .create(response)
@@ -30,7 +28,7 @@ class NotificationErrorTest : AcceptanceTest() {
         val response = client
                 .headers { h -> h.set(API_KEY_HEADER, "test123").set("Content-type", "application/json") }
                 .post()
-                .uri(serverUrl(NotificationController.CONTROLLER_PATH))
+                .uri(serverUrl(CONTROLLER_PATH))
                 .send(ByteBufFlux.fromString(Flux.just(mapper.writeValueAsString(DomainObjects.InfoNotification))))
                 .response().map { it.status().code() }
 
@@ -45,7 +43,7 @@ class NotificationErrorTest : AcceptanceTest() {
     fun `Unauthorized without Api Key`() {
         val response = client
                 .post()
-                .uri(serverUrl(NotificationController.CONTROLLER_PATH))
+                .uri(serverUrl(CONTROLLER_PATH))
                 .send(ByteBufFlux.fromString(Flux.just(mapper.writeValueAsString(DomainObjects.InfoNotification))))
                 .response().map { it.status().code() }
 
@@ -55,13 +53,4 @@ class NotificationErrorTest : AcceptanceTest() {
                 .verifyComplete()
     }
 
-    private fun statusCode(requestString: String): Mono<Int> {
-        return client
-                .headers { h -> h.set(API_KEY_HEADER, "test").set("Content-type", "application/json") }
-                .post()
-                .uri(serverUrl(NotificationController.CONTROLLER_PATH))
-                .send(ByteBufFlux.fromString(Flux.just(requestString)))
-                .response()
-                .map { it.status().code() }
-    }
 }

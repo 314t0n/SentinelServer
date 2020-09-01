@@ -49,6 +49,9 @@ class DomainObjects {
                 Optional.empty())
 
 
-        val ANotificationResponse = NotificationResponse(ATimeStamp, "dbid1")
+        val DeviceRequest = space.sentinel.api.request.DeviceRequest(
+                apiKey = "device123",
+                name = "raspberry123"
+        )
     }
 }

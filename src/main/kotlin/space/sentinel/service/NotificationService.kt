@@ -13,31 +13,29 @@ import space.sentinel.repository.InMemoryCache
 import space.sentinel.repository.NotificationRepository
 import space.sentinel.repository.entity.NotificationEntity
 import space.sentinel.translator.NotificationEntityTranslator
+import space.sentinel.translator.NotificationTranslator
 import java.util.*
 
 class NotificationService @Inject constructor(private val fileImageRepository: FileImageRepository,
                                               private val inMemoryCache: InMemoryCache,
+                                              private val paginationService: PaginationService,
                                               private val notificationRepository: NotificationRepository,
+                                              private val notificationTranslator: NotificationTranslator,
                                               private val notificationEntityTranslator: NotificationEntityTranslator) {
 
     companion object {
         private val NoImageFilenameFallback = Mono.just("no image")
-        const val DEFAULT_PAGE_SIZE = 5L
-        const val FIRST_PAGE = 0L
+
     }
 
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun getAll(params: Map<String, String>): Flux<Notification> {
-        val requestedPageNumber = Optional.ofNullable(params["page"])
-                .map(String::toLong)
-                .map { number -> number.minus(1) }
-                .orElse(FIRST_PAGE)
+        val (limit, offset) = paginationService.pagination(params)
 
-        val limit: Long = requestedPageNumber * DEFAULT_PAGE_SIZE
-        val offset: Long = DEFAULT_PAGE_SIZE
-
-        return notificationRepository.getAll(limit, offset)
+        return notificationRepository
+                .getAll(limit, offset)
+                .map {  notificationTranslator.translate(it) }
     }
 
     fun save(notification: Mono<NotificationRequest>): Mono<NotificationResponse> =

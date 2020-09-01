@@ -38,19 +38,28 @@ CREATE TABLE notification (
 INSERT INTO notification_type(name)
 VALUES ('ALERT'), ('MOTION DETECT'), ('INFO');
 
-INSERT INTO device(created, name, api_key )
-VALUES (now(), 'TEST_DEVICE', 'test123');
+INSERT INTO device(created, name, api_key)
+VALUES ("2020-08-31 07:00:10", 'TEST_DEVICE1', 'test1'),
+("2020-08-31 07:00:11", 'TEST_DEVICE2', 'test1'),
+("2020-08-31 07:00:12", 'TEST_DEVICE3', 'test1'),
+("2020-08-31 07:00:13", 'TEST_DEVICE4', 'test1'),
+("2020-08-31 07:00:14", 'TEST_DEVICE5', 'test1'),
+("2020-08-31 07:00:40", 'TEST_DEVICE6', 'test1'),
+("2020-08-31 07:50:50", 'TEST_DEVICE7', 'test1'),
+("2020-08-31 07:55:50", 'TEST_DEVICE8', 'test1'),
+("2020-08-31 07:56:20", 'TEST_DEVICE88', 'test1'),
+("2020-08-31 07:57:30", 'TEST_DEVICE9', 'test123');
 
 INSERT INTO notification(created, message, device_id, notification_type)
 VALUES
 ("2020-08-31 07:00:00", 'test message1', 1, 3),
-("2020-08-31 07:10:00", 'test message2', 1, 3),
-("2020-08-31 07:20:00", 'test message3', 1, 1),
-("2020-08-31 07:30:00", 'test message4', 1, 2),
-("2020-08-31 07:40:00", 'test message5', 1, 3),
-("2020-08-31 07:50:00", 'test message6', 1, 1),
+("2020-08-31 07:10:00", 'test message2', 2, 2),
+("2020-08-31 07:20:00", 'test message3', 3, 1),
+("2020-08-31 07:30:00", 'test message4', 4, 2),
+("2020-08-31 07:40:00", 'test message5', 5, 3),
+("2020-08-31 07:50:00", 'test message6', 6, 1),
 ("2020-08-31 07:55:00", 'test message7', 1, 2),
 ("2020-08-31 07:56:00", 'test message8', 1, 3),
-("2020-08-31 07:57:00", 'test message9', 1, 3),
+("2020-08-31 07:57:00", 'test message9', 1, 2),
 ("2020-08-31 07:58:00", 'test message10', 1, 3)
 ;

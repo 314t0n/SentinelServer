@@ -8,7 +8,12 @@ import org.apache.ibatis.jdbc.ScriptRunner
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.netty.ByteBufFlux
 import reactor.netty.http.client.HttpClient
+import space.sentinel.controller.DeviceController
+import space.sentinel.controller.SentinelController
 import space.sentinel.server.SentinelServer
 import space.sentinel.server.modules.SentinelServerModule
 import java.io.FileInputStream
@@ -49,6 +54,46 @@ open class AcceptanceTest {
     @AfterAll
     internal fun destroy() {
         server.disposeNow()
+    }
+
+    protected fun get(requestUri: String, query: String = ""): Mono<String> {
+        return client
+                .headers { h -> h.set(SentinelController.API_KEY_HEADER, "test").set("Content-type", "application/json") }
+                .get()
+                .uri("""${serverUrl(requestUri)}$query""")
+                .responseContent()
+                .retain().aggregate()
+                .asString()
+    }
+
+    protected fun post(requestString: String, path: String): Mono<String> {
+        return client
+                .headers { h -> h.set(SentinelController.API_KEY_HEADER, "test").set("Content-type", "application/json") }
+                .post()
+                .uri(serverUrl(path))
+                .send(ByteBufFlux.fromString(Flux.just(requestString)))
+                .responseContent()
+                .retain().aggregate()
+                .asString()
+    }
+
+    protected fun statusCode(requestString: String, path: String): Mono<Int> {
+        return client
+                .headers { h -> h.set(SentinelController.API_KEY_HEADER, "test").set("Content-type", "application/json") }
+                .post()
+                .uri(serverUrl(path))
+                .send(ByteBufFlux.fromString(Flux.just(requestString)))
+                .response()
+                .map { it.status().code() }
+    }
+
+    protected fun statusCode(path: String): Mono<Int> {
+        return client
+                .headers { h -> h.set(SentinelController.API_KEY_HEADER, "test").set("Content-type", "application/json") }
+                .get()
+                .uri(serverUrl(path))
+                .response()
+                .map { it.status().code() }
     }
 
 }

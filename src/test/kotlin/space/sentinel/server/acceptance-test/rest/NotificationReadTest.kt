@@ -18,7 +18,7 @@ class NotificationReadTest : AcceptanceTest() {
 
     @Test
     fun `GET should return first x element`() {
-        val response = get()
+        val response = get("$CONTROLLER_PATH")
 
         StepVerifier
                 .create(response)
@@ -52,16 +52,6 @@ class NotificationReadTest : AcceptanceTest() {
                 }
                 .expectComplete()
                 .verify()
-    }
-
-    private fun get(requestUri: String = CONTROLLER_PATH, query: String = ""): Mono<String> {
-        return client
-                .headers { h -> h.set(API_KEY_HEADER, "test").set("Content-type", "application/json") }
-                .get()
-                .uri("""${serverUrl(requestUri)}$query""")
-                .responseContent()
-                .retain().aggregate()
-                .asString()
     }
 
 }
