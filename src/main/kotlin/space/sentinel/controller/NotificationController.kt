@@ -5,6 +5,7 @@ import com.google.inject.Inject
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON
 import io.netty.handler.codec.http.HttpResponseStatus
+import io.netty.handler.codec.http.HttpResponseStatus.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
@@ -34,7 +35,7 @@ class NotificationController @Inject constructor(private val notificationService
                 .post("/$CONTROLLER_PATH") { request, response ->
                     withValidApiKey(request, response) { post(request, response) }
                 }
-                .get("/$CONTROLLER_PATH?page={page}") { request, response ->
+                .get("/$CONTROLLER_PATH") { request, response ->
                     withValidApiKey(request, response) { get(request, response) }
                 }
     }
@@ -48,32 +49,38 @@ class NotificationController @Inject constructor(private val notificationService
                 .doOnNext(::println)
 
         return response
-                .status(HttpResponseStatus.OK)
+                .status(OK)
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .sendString(notifications)
                 .then()
     }
 
     private fun post(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
-        val result = request
+        return request
                 .receive()
                 .aggregate()
                 .asString()
                 .map(translator::translateRequest)
                 .map(notificationService::save)
-                .flatMap(translator::translateResponse)
-                .doOnError { logger.error(it.message, it) }
+                .flatMap {
+                    response
+                            .status(CREATED)
+                            .send()
+                            .then()
+                }
                 .onErrorResume(JsonParseException::class.java) {
-                    translator.translateError(ServerErrorResponse.createBadRequest(it))
+                    response
+                            .status(BAD_REQUEST)
+                            .sendString(translator.translateError(ServerErrorResponse.createErrorResponse(it)))
+                            .then()
                 }
                 .onErrorResume(Exception::class.java) {
-                    translator.translateError(ServerErrorResponse.createInternalServerError(it))
+                    response
+                            .status(INTERNAL_SERVER_ERROR)
+                            .sendString(translator.translateError(ServerErrorResponse.createErrorResponse(it)))
+                            .then()
                 }
-
-        return response
-                .status(HttpResponseStatus.OK)
-                .header(CONTENT_TYPE, APPLICATION_JSON)
-                .sendString(result)
+                .doOnError { logger.error("Error while saving notification: ${it.message}") }
                 .then()
     }
 

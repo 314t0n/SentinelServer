@@ -1,67 +1,87 @@
 package space.sentinel.server.`acceptance-test`.rest
 
 
-import com.jayway.jsonassert.impl.matcher.IsCollectionWithSize.hasSize
-import com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath
-import com.jayway.jsonpath.matchers.JsonPathMatchers.isJson
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.netty.ByteBufFlux
 import reactor.test.StepVerifier
 import space.sentinel.controller.NotificationController
-import space.sentinel.controller.NotificationController.Companion.CONTROLLER_PATH
 import space.sentinel.controller.SentinelController.Companion.API_KEY_HEADER
 import space.sentinel.server.`acceptance-test`.AcceptanceTest
+import space.sentinel.server.`acceptance-test`.DomainObjects
 
-class NotificationReadTest : AcceptanceTest() {
+class NotificationCreateTest : AcceptanceTest() {
 
     @Test
-    fun `GET should return first x element`() {
-        val response = get()
+    fun `POST alert should return empty body`() {
+        val requestString = mapper.writeValueAsString(DomainObjects.AlertNotificationWithImage)
+
+        val response = post(requestString)
 
         StepVerifier
                 .create(response)
-                .expectNextMatches { json: String ->
-
-                    assertThat(json, isJson())
-                    assertThat(json, hasJsonPath("$.notifications", hasSize(5)))
-                    assertThat(json, hasJsonPath("$.notifications[0].id", equalTo("10")))
-                    assertThat(json, hasJsonPath("$.notifications[0].message", equalTo("test message10")))
-                    assertThat(json, hasJsonPath("$.notifications[0].device_id", equalTo("1")))
-
-                    true
-                }
                 .expectComplete()
                 .verify()
     }
 
     @Test
-    fun `GET should paginate`() {
-        val response = get("$CONTROLLER_PATH", "?page=2")
+    fun `POST alert should respond CREATED`() {
+        val requestString = mapper.writeValueAsString(DomainObjects.AlertNotificationWithImage)
+
+        val response = statusCode(requestString)
 
         StepVerifier
                 .create(response)
-                .expectNextMatches { json: String ->
-
-                    assertThat(json, isJson())
-                    assertThat(json, hasJsonPath("$.notifications", hasSize(5)))
-                    assertThat(json, hasJsonPath("$.notifications[0].message", equalTo("test message5")))
-
-                    true
-                }
-                .expectComplete()
-                .verify()
+                .expectNext(201)
+                .verifyComplete()
     }
 
-    private fun get(requestUri: String = CONTROLLER_PATH, query: String = ""): Mono<String> {
+    @Test
+    fun `POST alert without image should respond Ok`() {
+        val requestString = mapper.writeValueAsString(DomainObjects.AlertNotificationWithoutImage)
+
+        val response = statusCode(requestString)
+
+        StepVerifier
+                .create(response)
+                .expectNext(201)
+                .verifyComplete()
+    }
+
+    @Test
+    fun `POST info should respond with Ok`() {
+        val requestString = mapper.writeValueAsString(DomainObjects.InfoNotification)
+
+        val response = statusCode(requestString)
+
+        StepVerifier
+                .create(response)
+                .expectNext(201)
+                .verifyComplete()
+    }
+
+
+    private fun post(requestString: String): Mono<String> {
         return client
                 .headers { h -> h.set(API_KEY_HEADER, "test").set("Content-type", "application/json") }
-                .get()
-                .uri("""${serverUrl(requestUri)}$query""")
+                .post()
+                .uri(serverUrl(NotificationController.CONTROLLER_PATH))
+                .send(ByteBufFlux.fromString(Flux.just(requestString)))
                 .responseContent()
                 .retain().aggregate()
                 .asString()
     }
+
+    private fun statusCode(requestString: String): Mono<Int> {
+        return client
+                .headers { h -> h.set(API_KEY_HEADER, "test").set("Content-type", "application/json") }
+                .post()
+                .uri(serverUrl(NotificationController.CONTROLLER_PATH))
+                .send(ByteBufFlux.fromString(Flux.just(requestString)))
+                .response()
+                .map { it.status().code() }
+    }
+
 
 }

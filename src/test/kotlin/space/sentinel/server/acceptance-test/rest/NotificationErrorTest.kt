@@ -1,4 +1,4 @@
-package space.sentinel.server.`acceptance-test`
+package space.sentinel.server.`acceptance-test`.rest
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -8,74 +8,21 @@ import reactor.netty.ByteBufFlux
 import reactor.test.StepVerifier
 import space.sentinel.controller.NotificationController
 import space.sentinel.controller.SentinelController.Companion.API_KEY_HEADER
+import space.sentinel.server.`acceptance-test`.AcceptanceTest
+import space.sentinel.server.`acceptance-test`.DomainObjects
 
-class NotificationTest : AcceptanceTest() {
-
-    @Test
-    fun `ALERT with image POST should response with OK`() {
-        val requestString = mapper.writeValueAsString(DomainObjects.AlertNotificationWithImage)
-
-        val response = fetch(requestString).doOnNext(::println)
-
-        StepVerifier
-                .create(response)
-                .expectNextMatches { underTest ->
-                    assertThat(underTest).contains("databaseId")
-                    assertThat(underTest).contains("modified")
-                    true
-                }
-                .expectComplete()
-                .verify()
-    }
-
-    @Test
-    fun `ALERT without image POST should response with OK`() {
-        val requestString = mapper.writeValueAsString(DomainObjects.AlertNotificationWithoutImage)
-
-        val response = fetch(requestString).doOnNext(::println)
-
-        StepVerifier
-                .create(response)
-                .expectNextMatches { underTest ->
-                    assertThat(underTest).contains("databaseId")
-                    assertThat(underTest).contains("modified")
-                    true
-                }
-                .expectComplete()
-                .verify()
-    }
-
-    @Test
-    fun `INFO POST should response with OK`() {
-        val requestString = mapper.writeValueAsString(DomainObjects.InfoNotification)
-
-        val response = fetch(requestString)
-
-        StepVerifier
-                .create(response)
-                .expectNextMatches { underTest ->
-                    assertThat(underTest).contains("databaseId")
-                    assertThat(underTest).contains("modified")
-                    true
-                }
-                .expectComplete()
-                .verify()
-    }
+class NotificationErrorTest : AcceptanceTest() {
 
     @Test
     fun `Malformed JSON POST should response with Bad Request`() {
         val requestString = "invalid request"
 
-        val response = fetch(requestString)
+        val response = statusCode(requestString)
 
         StepVerifier
                 .create(response)
-                .expectNextMatches { underTest ->
-                    assertThat(underTest).contains("\"errorCode\":400,\"reason\":\"Unrecognized token")
-                    true
-                }
-                .expectComplete()
-                .verify()
+                .expectNext(400)
+                .verifyComplete()
     }
 
     @Test
@@ -85,16 +32,12 @@ class NotificationTest : AcceptanceTest() {
                 .post()
                 .uri(serverUrl(NotificationController.CONTROLLER_PATH))
                 .send(ByteBufFlux.fromString(Flux.just(mapper.writeValueAsString(DomainObjects.InfoNotification))))
-                .response().map { it.status() }
+                .response().map { it.status().code() }
 
         StepVerifier
                 .create(response)
-                .expectNextMatches { underTest ->
-                    assertThat(underTest.code()).isEqualTo(401)
-                    true
-                }
-                .expectComplete()
-                .verify()
+                .expectNext(401)
+                .verifyComplete()
     }
 
 
@@ -104,27 +47,21 @@ class NotificationTest : AcceptanceTest() {
                 .post()
                 .uri(serverUrl(NotificationController.CONTROLLER_PATH))
                 .send(ByteBufFlux.fromString(Flux.just(mapper.writeValueAsString(DomainObjects.InfoNotification))))
-                .response().map { it.status() }
+                .response().map { it.status().code() }
 
         StepVerifier
                 .create(response)
-                .expectNextMatches { underTest ->
-                    assertThat(underTest.code()).isEqualTo(401)
-                    true
-                }
-                .expectComplete()
-                .verify()
+                .expectNext(401)
+                .verifyComplete()
     }
 
-    private fun fetch(requestString: String): Mono<String> {
+    private fun statusCode(requestString: String): Mono<Int> {
         return client
                 .headers { h -> h.set(API_KEY_HEADER, "test").set("Content-type", "application/json") }
                 .post()
                 .uri(serverUrl(NotificationController.CONTROLLER_PATH))
                 .send(ByteBufFlux.fromString(Flux.just(requestString)))
-                .responseContent()
-                .retain().aggregate()
-                .asString()
+                .response()
+                .map { it.status().code() }
     }
-
 }
