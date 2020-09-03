@@ -50,7 +50,7 @@ class DeviceController @Inject constructor(private val deviceService: DeviceServ
                 .get(id)
                 .map { deviceTranslator.toJson(it) }
                 .flatMap {
-                     response
+                    response
                             .status(OK)
                             .header(CONTENT_TYPE, APPLICATION_JSON)
                             .sendString(Mono.just(it))
@@ -89,7 +89,7 @@ class DeviceController @Inject constructor(private val deviceService: DeviceServ
                 .flatMap {
                     response
                             .status(CREATED)
-                            .send()
+                            .sendString(it.map { id -> deviceTranslator.translateId(id) })
                             .then()
                 }
                 .onErrorResume(JsonParseException::class.java) {
