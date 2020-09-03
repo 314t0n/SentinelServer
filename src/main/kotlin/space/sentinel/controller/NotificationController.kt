@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.google.inject.Inject
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON
-import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpResponseStatus.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -18,6 +17,7 @@ import space.sentinel.repository.ApiKeyRepository
 import space.sentinel.service.NotificationService
 import space.sentinel.translator.NotificationTranslator
 import space.sentinel.util.QueryParameterResolver
+import java.lang.IllegalArgumentException
 
 class NotificationController @Inject constructor(private val notificationService: NotificationService,
                                                  private val translator: NotificationTranslator,
@@ -35,12 +35,37 @@ class NotificationController @Inject constructor(private val notificationService
                 .post("/$CONTROLLER_PATH") { request, response ->
                     withValidApiKey(request, response) { post(request, response) }
                 }
-                .get("/$CONTROLLER_PATH?page={page}") { request, response ->
+                .get("/$CONTROLLER_PATH") { request, response ->
+                    withValidApiKey(request, response) { getAll(request, response) }
+                }
+                .get("/${CONTROLLER_PATH}/{id}") { request, response ->
                     withValidApiKey(request, response) { get(request, response) }
                 }
     }
 
     private fun get(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
+        val id = request.param("id")!!
+
+        return notificationService
+                .get(id)
+                .map { translator.toJson(it) }
+                .flatMap {
+                    response
+                            .status(OK)
+                            .header(CONTENT_TYPE, APPLICATION_JSON)
+                            .sendString(Mono.just(it))
+                            .then()
+                }
+                .onErrorResume(IllegalArgumentException::class.java) {
+                    response
+                            .status(NOT_FOUND)
+                            .send()
+                            .then()
+                }
+                .then()
+    }
+
+    private fun getAll(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
         val notifications = notificationService
                 .getAll(queryParameterResolver.parameterMap(request))
                 .collectList()
@@ -61,11 +86,12 @@ class NotificationController @Inject constructor(private val notificationService
                 .aggregate()
                 .asString()
                 .map(translator::translateRequest)
-                .map(notificationService::save)
+                .map{ notificationService.save(it) }
                 .flatMap {
+                    val entityId = it.map { id -> translator.translateId(id) }
                     response
                             .status(CREATED)
-                            .send()
+                            .sendString(entityId)
                             .then()
                 }
                 .onErrorResume(JsonParseException::class.java) {

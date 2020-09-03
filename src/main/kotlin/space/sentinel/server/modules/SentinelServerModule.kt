@@ -13,7 +13,6 @@ import space.sentinel.service.NotificationService
 import space.sentinel.service.PaginationService
 import space.sentinel.translator.DateTimeTranslator
 import space.sentinel.translator.DeviceTranslator
-import space.sentinel.translator.NotificationEntityTranslator
 import space.sentinel.translator.NotificationTranslator
 import space.sentinel.util.QueryParameterResolver
 
@@ -27,7 +26,6 @@ class SentinelServerModule: KotlinModule(){
         bind<DeviceTranslator>().`in`<Singleton>()
         bind<DeviceService>().`in`<Singleton>()
         bind<DeviceRepository>().`in`<Singleton>()
-        bind<NotificationEntityTranslator>().`in`<Singleton>()
         bind<NotificationController>().`in`<Singleton>()
         bind<NotificationController>().`in`<Singleton>()
         bind<PaginationService>().`in`<Singleton>()

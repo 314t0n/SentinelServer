@@ -87,9 +87,10 @@ class DeviceController @Inject constructor(private val deviceService: DeviceServ
                 .map { deviceTranslator.translate(it) }
                 .map { deviceService.save(it) }
                 .flatMap {
+                    val entityId = it.map { id -> deviceTranslator.translateId(id) }
                     response
                             .status(CREATED)
-                            .sendString(it.map { id -> deviceTranslator.translateId(id) })
+                            .sendString(entityId)
                             .then()
                 }
                 .onErrorResume(JsonParseException::class.java) {

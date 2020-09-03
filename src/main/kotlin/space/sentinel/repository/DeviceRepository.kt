@@ -18,45 +18,30 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 
-class DeviceRepository @Inject constructor(config: Config) {
+class DeviceRepository @Inject constructor(config: Config) : SentinelRepository(config) {
 
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    private val mariadbConnectionConfiguration = MariadbConnectionConfiguration.builder()
-            .host(config.getString("mariadb.host"))
-            .port(config.getInt("mariadb.port"))
-            .username(config.getString("mariadb.username"))
-            .password(config.getString("mariadb.password"))
-            .database(config.getString("mariadb.database"))
-            .build();
-
-    private val connectionFactory = MariadbConnectionFactory(mariadbConnectionConfiguration)
-
     fun getAll(limit: Long, offset: Long): Flux<Row> {
-        val selectQuery = "SELECT x.* FROM sentinel.device x ORDER BY x.created DESC LIMIT $limit,$offset" // bind not supported
+        val selectQuery = "SELECT x.* FROM sentinel.device x ORDER BY x.created DESC LIMIT ?,?"
 
         return Flux.from(connectionFactory.create())
-                .flatMap { c -> c.createStatement(selectQuery).execute() }
-                .flatMap { result ->
-                    result.map { row, meta -> row }
-                }
+                .flatMap { c -> c.createStatement(selectQuery).bind(0, limit).bind(1, offset).execute() }
+                .flatMap { result -> result.map { row, _ -> row } }
     }
 
     fun get(id: Long): Mono<Row> {
-        val selectQuery = "SELECT x.* FROM sentinel.device x WHERE id=$id" // bind not supported
+        val selectQuery = "SELECT x.* FROM sentinel.device x WHERE id=?"
 
         return Flux.from(connectionFactory.create())
-                .flatMap { c -> c.createStatement(selectQuery).execute() }
-                .flatMap { result ->
-                    result.map { row, meta -> row }
-                }.toMono()
+                .flatMap { c -> c.createStatement(selectQuery).bind(0, id).execute() }
+                .flatMap { result -> result.map { row, _ -> row } }
+                .toMono()
     }
 
     fun save(device: DeviceRequest): Mono<Long> {
         val created = OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         val selectQuery = "INSERT INTO device(created, name, api_key) VALUES (?, ?, ?)"
-
-        logger.info("Inserting: $created, ${device.apiKey}, ${device.name}")
 
         return Flux.from(connectionFactory.create())
                 .flatMap { c ->
@@ -67,7 +52,7 @@ class DeviceRepository @Inject constructor(config: Config) {
                             .returnGeneratedValues("id")
                             .execute()
                 }
-                .flatMap { it.map { r, m -> r.get("id", String::class.java)!!.toLong() } }
+                .flatMap { result -> result.map { r, _ -> r.get("id", String::class.java)!!.toLong() } }
                 .doOnError { logger.error(it.message) }
                 .toMono()
     }

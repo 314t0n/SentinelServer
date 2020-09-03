@@ -7,14 +7,39 @@ import com.jayway.jsonpath.matchers.JsonPathMatchers.isJson
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
-import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import space.sentinel.controller.NotificationController
 import space.sentinel.controller.NotificationController.Companion.CONTROLLER_PATH
-import space.sentinel.controller.SentinelController.Companion.API_KEY_HEADER
 import space.sentinel.server.`acceptance-test`.AcceptanceTest
 
 class NotificationReadTest : AcceptanceTest() {
+
+    @Test
+    fun `GET by id should return entity`() {
+        val response = get("$CONTROLLER_PATH", "/2")
+
+        StepVerifier
+                .create(response)
+                .expectNextMatches { json: String ->
+
+                    assertThat(json, isJson())
+                    assertThat(json, hasJsonPath("$.id", equalTo("2")))
+                    assertThat(json, hasJsonPath("$.message", equalTo("test message2")))
+
+                    true
+                }
+                .expectComplete()
+                .verify()
+    }
+
+    @Test
+    fun `GET by wrong id should return NOT FOUND`() {
+        val response = statusCode("$CONTROLLER_PATH/invalid")
+
+        StepVerifier
+                .create(response)
+                .expectNext(404)
+                .verifyComplete()
+    }
 
     @Test
     fun `GET should return first x element`() {
