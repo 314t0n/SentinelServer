@@ -15,6 +15,7 @@ import space.sentinel.api.Devices
 import space.sentinel.api.response.ServerErrorResponse
 import space.sentinel.repository.ApiKeyRepository
 import space.sentinel.service.DeviceService
+import space.sentinel.service.UserService
 import space.sentinel.translator.DeviceTranslator
 import space.sentinel.util.QueryParameterResolver
 import java.lang.IllegalArgumentException
@@ -22,7 +23,8 @@ import java.lang.IllegalArgumentException
 class DeviceController @Inject constructor(private val deviceService: DeviceService,
                                            private val deviceTranslator: DeviceTranslator,
                                            private val queryParameterResolver: QueryParameterResolver,
-                                           apiKeyRepository: ApiKeyRepository) : SentinelController(apiKeyRepository) {
+                                           userService: UserService,
+                                           apiKeyRepository: ApiKeyRepository) : SentinelController(apiKeyRepository, userService) {
 
     companion object {
         const val CONTROLLER_PATH = "device"
@@ -80,12 +82,15 @@ class DeviceController @Inject constructor(private val deviceService: DeviceServ
     }
 
     private fun post(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
-        return request
+        val deviceCreateRequest = request
                 .receive()
                 .aggregate()
                 .asString()
                 .map { deviceTranslator.translate(it) }
-                .map { deviceService.save(it) }
+
+        return withUserProfile(request)
+                .zipWith(deviceCreateRequest)
+                .map { deviceService.save(it.t2, it.t1) }
                 .flatMap {
                     val entityId = it.map { id -> deviceTranslator.translateId(id) }
                     response
@@ -93,20 +98,27 @@ class DeviceController @Inject constructor(private val deviceService: DeviceServ
                             .sendString(entityId)
                             .then()
                 }
+                .onErrorResume(IllegalArgumentException::class.java) {
+                    unauthorized(response)
+                }
                 .onErrorResume(JsonParseException::class.java) {
+                    logger.warn("Error while creating device: ${it.message}")
                     response
                             .status(BAD_REQUEST)
                             .sendString(deviceTranslator.translateError(ServerErrorResponse.createErrorResponse(it)))
                             .then()
                 }
                 .onErrorResume(Exception::class.java) {
+                    logger.error("Error while creating device: ${it.message}", it)
                     response
                             .status(INTERNAL_SERVER_ERROR)
                             .sendString(deviceTranslator.translateError(ServerErrorResponse.createErrorResponse(it)))
                             .then()
                 }
-                .doOnError { logger.error("Error while saving notification: ${it.message}") }
+                .doOnError { logger.error("Error while creating device: ${it.message}") }
                 .then()
+
+
     }
 
 }

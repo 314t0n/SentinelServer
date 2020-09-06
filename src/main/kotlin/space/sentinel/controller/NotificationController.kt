@@ -15,6 +15,7 @@ import space.sentinel.api.Notifications
 import space.sentinel.api.response.ServerErrorResponse
 import space.sentinel.repository.ApiKeyRepository
 import space.sentinel.service.NotificationService
+import space.sentinel.service.UserService
 import space.sentinel.translator.NotificationTranslator
 import space.sentinel.util.QueryParameterResolver
 import java.lang.IllegalArgumentException
@@ -22,7 +23,8 @@ import java.lang.IllegalArgumentException
 class NotificationController @Inject constructor(private val notificationService: NotificationService,
                                                  private val translator: NotificationTranslator,
                                                  private val queryParameterResolver: QueryParameterResolver,
-                                                 apiKeyRepository: ApiKeyRepository) : SentinelController(apiKeyRepository) {
+                                                 userService: UserService,
+                                                 apiKeyRepository: ApiKeyRepository) : SentinelController(apiKeyRepository, userService) {
 
     companion object {
         const val CONTROLLER_PATH = "notification"

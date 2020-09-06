@@ -15,13 +15,13 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 
-class NotificationRepository @Inject constructor(
+class UserRepository @Inject constructor(
         config: Config) : SentinelRepository(config) {
 
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun getAll(limit: Long, offset: Long): Flux<Row> {
-        val selectQuery = "SELECT x.* FROM sentinel.notification x ORDER BY x.created DESC LIMIT ?,?"
+        val selectQuery = "SELECT x.* FROM sentinel.user x ORDER BY x.created DESC LIMIT ?,?"
 
         return Flux.from(connectionFactory.create())
                 .flatMap { c -> c.createStatement(selectQuery).bind(0, limit).bind(1, offset).execute() }
@@ -29,6 +29,7 @@ class NotificationRepository @Inject constructor(
     }
 
     fun save(notificationRequest: NotificationRequest): Mono<Long> {
+        throw RuntimeException("TODO")
         val created = timestampFormat(OffsetDateTime.now())
         val selectQuery = "INSERT INTO notification(created, message, device_id, notification_type) VALUES (?, ?, ?, ?)"
 
@@ -48,10 +49,19 @@ class NotificationRepository @Inject constructor(
     }
 
     fun get(id: Long): Mono<Row> {
-        val selectQuery = "SELECT x.* FROM sentinel.notification x WHERE id=?"
+        val selectQuery = "SELECT x.* FROM sentinel.user x WHERE id=?"
 
         return Flux.from(connectionFactory.create())
                 .flatMap { c -> c.createStatement(selectQuery).bind(0, id).execute() }
+                .flatMap { result -> result.map { row, _ -> row } }
+                .toMono()
+    }
+
+    fun findBySessionId(sessionId: String): Mono<Row> {
+        val selectQuery = "SELECT u.id, u.email, u.created from sentinel.session s LEFT JOIN user u on s.user_id = u.id WHERE session_id=?"
+
+        return Flux.from(connectionFactory.create())
+                .flatMap { c -> c.createStatement(selectQuery).bind(0, sessionId).execute() }
                 .flatMap { result -> result.map { row, _ -> row } }
                 .toMono()
     }

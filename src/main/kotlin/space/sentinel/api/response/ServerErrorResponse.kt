@@ -10,6 +10,7 @@ open class ServerErrorResponse @JsonCreator constructor(
 
     companion object {
         fun createErrorResponse(t: Throwable): ServerErrorResponse = ServerErrorResponse(t.message.orEmpty())
+        fun createErrorResponse(reason: String): ServerErrorResponse = ServerErrorResponse(reason)
     }
 
 }

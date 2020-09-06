@@ -13,6 +13,7 @@ import reactor.netty.http.server.HttpServerRoutes
 import space.sentinel.controller.ActuatorController
 import space.sentinel.controller.DeviceController
 import space.sentinel.controller.NotificationController
+import space.sentinel.controller.UserProfileController
 
 /**
  * HTTP Server setup
@@ -29,6 +30,7 @@ class SentinelServer() {
                     injector.getInstance<ActuatorController>().register(routes)
                     injector.getInstance<NotificationController>().register(routes)
                     injector.getInstance<DeviceController>().register(routes)
+                    injector.getInstance<UserProfileController>().register(routes)
                 }
                 .bindNow()
     }

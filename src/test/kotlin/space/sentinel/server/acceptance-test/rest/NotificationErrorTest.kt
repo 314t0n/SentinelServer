@@ -1,21 +1,25 @@
 package space.sentinel.server.`acceptance-test`.rest
 
 import org.junit.jupiter.api.Test
-import reactor.core.publisher.Flux
-import reactor.netty.ByteBufFlux
 import reactor.test.StepVerifier
 import space.sentinel.controller.NotificationController.Companion.CONTROLLER_PATH
-import space.sentinel.controller.SentinelController.Companion.API_KEY_HEADER
 import space.sentinel.server.`acceptance-test`.AcceptanceTest
 import space.sentinel.server.`acceptance-test`.DomainObjects
+import space.sentinel.server.test.request.request.GetRequestBuilder
+import space.sentinel.server.test.request.request.GetRequester
+import space.sentinel.server.test.request.request.PostRequestBuilder
+import space.sentinel.server.test.request.request.PostRequester
 
 class NotificationErrorTest : AcceptanceTest() {
 
     @Test
     fun `Malformed JSON POST should response with Bad Request`() {
-        val requestString = "invalid request"
+        val request = PostRequestBuilder(baseUri)
+                .withApiKey()
+                .uri(CONTROLLER_PATH)
 
-        val response = statusCode(requestString, CONTROLLER_PATH)
+        val response = PostRequester(request)
+                .statusCode("invalid request")
 
         StepVerifier
                 .create(response)
@@ -25,12 +29,12 @@ class NotificationErrorTest : AcceptanceTest() {
 
     @Test
     fun `Unauthorized with wrong Api Key`() {
-        val response = client
-                .headers { h -> h.set(API_KEY_HEADER, "test123").set("Content-type", "application/json") }
-                .post()
-                .uri(serverUrl(CONTROLLER_PATH))
-                .send(ByteBufFlux.fromString(Flux.just(mapper.writeValueAsString(DomainObjects.InfoNotification))))
-                .response().map { it.status().code() }
+        val request = PostRequestBuilder(baseUri)
+                .withApiKey("invalid")
+                .uri(CONTROLLER_PATH)
+
+        val response = PostRequester(request)
+                .statusCode(mapper.writeValueAsString(DomainObjects.InfoNotification))
 
         StepVerifier
                 .create(response)
@@ -38,14 +42,13 @@ class NotificationErrorTest : AcceptanceTest() {
                 .verifyComplete()
     }
 
-
     @Test
     fun `Unauthorized without Api Key`() {
-        val response = client
-                .post()
-                .uri(serverUrl(CONTROLLER_PATH))
-                .send(ByteBufFlux.fromString(Flux.just(mapper.writeValueAsString(DomainObjects.InfoNotification))))
-                .response().map { it.status().code() }
+        val request = PostRequestBuilder(baseUri)
+                .uri(CONTROLLER_PATH)
+
+        val response = PostRequester(request)
+                .statusCode(mapper.writeValueAsString(DomainObjects.InfoNotification))
 
         StepVerifier
                 .create(response)

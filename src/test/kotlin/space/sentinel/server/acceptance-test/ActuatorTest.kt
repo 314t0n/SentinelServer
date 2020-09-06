@@ -3,12 +3,12 @@ package space.sentinel.server.`acceptance-test`
 import org.junit.jupiter.api.Test
 import reactor.test.StepVerifier
 
-class ActuatorTest: AcceptanceTest(){
+class ActuatorTest : AcceptanceTest() {
 
     @Test
     fun `ping endpoint should resposne with pong`() {
         val response = client.get()
-                .uri(serverUrl("ping"))
+                .uri("${baseUri}/ping")
                 .responseContent()
                 .asString()
 

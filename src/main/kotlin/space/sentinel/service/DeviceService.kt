@@ -7,11 +7,11 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import space.sentinel.api.Device
 import space.sentinel.api.EntityId
+import space.sentinel.api.UserProfile
 import space.sentinel.api.request.DeviceRequest
 import space.sentinel.repository.DeviceRepository
 import space.sentinel.translator.DeviceTranslator
 import java.lang.IllegalArgumentException
-import java.lang.RuntimeException
 
 class DeviceService @Inject constructor(private val paginationService: PaginationService,
                                         private val deviceRepository: DeviceRepository,
@@ -38,9 +38,9 @@ class DeviceService @Inject constructor(private val paginationService: Paginatio
         }
     }
 
-    fun save(device: DeviceRequest): Mono<EntityId> {
+    fun save(device: DeviceRequest, userProfile: UserProfile): Mono<EntityId> {
         return deviceRepository
-                .save(device).map { EntityId(it) }
+                .save(device, userProfile).map { EntityId(it) }
     }
 
 }
