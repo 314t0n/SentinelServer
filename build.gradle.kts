@@ -36,6 +36,7 @@ dependencies {
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.0.2.RELEASE")
     implementation("org.mariadb.jdbc:mariadb-java-client:2.6.2")
     implementation("org.mariadb:r2dbc-mariadb:0.8.3-beta1")
+    implementation("org.mindrot:jbcrypt:0.4")
     implementation("org.bytedeco:javacv-platform:1.5.2")
     {
         //        exclude("org.bytedeco", "openblas")

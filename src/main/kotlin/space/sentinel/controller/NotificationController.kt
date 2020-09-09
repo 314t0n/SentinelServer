@@ -13,6 +13,7 @@ import reactor.netty.http.server.HttpServerResponse
 import reactor.netty.http.server.HttpServerRoutes
 import space.sentinel.api.Notifications
 import space.sentinel.api.response.ServerErrorResponse
+import space.sentinel.exception.UnauthorizedException
 import space.sentinel.repository.ApiKeyRepository
 import space.sentinel.service.NotificationService
 import space.sentinel.service.UserService
@@ -46,10 +47,9 @@ class NotificationController @Inject constructor(private val notificationService
     }
 
     private fun get(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
-        val id = request.param("id")!!
-
+        val userProfile = withUserProfile(request)
         return notificationService
-                .get(id)
+                .get(request.param("id")!!, userProfile)
                 .map { translator.toJson(it) }
                 .flatMap {
                     response
@@ -63,6 +63,8 @@ class NotificationController @Inject constructor(private val notificationService
                             .status(NOT_FOUND)
                             .send()
                             .then()
+                }.onErrorResume(UnauthorizedException::class.java) {
+                    unauthorized(response)
                 }
                 .then()
     }
@@ -88,7 +90,7 @@ class NotificationController @Inject constructor(private val notificationService
                 .aggregate()
                 .asString()
                 .map(translator::translateRequest)
-                .map{ notificationService.save(it) }
+                .map { notificationService.save(it) }
                 .flatMap {
                     val entityId = it.map { id -> translator.translateId(id) }
                     response

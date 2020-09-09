@@ -12,7 +12,6 @@ import space.sentinel.api.UserProfile
 import space.sentinel.api.request.DeviceRequest
 import java.time.OffsetDateTime
 
-
 class DeviceRepository @Inject constructor(config: Config) : SentinelRepository(config) {
 
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
@@ -36,11 +35,11 @@ class DeviceRepository @Inject constructor(config: Config) : SentinelRepository(
 
     fun save(device: DeviceRequest, userProfile: UserProfile): Mono<Long> {
         val created = timestampFormat(OffsetDateTime.now())
-        val selectQuery = "INSERT INTO device(created, name, api_key, user_id) VALUES (?, ?, ?, ?)"
+        val query = "INSERT INTO device(created, name, api_key, user_id) VALUES (?, ?, ?, ?)"
 
         return Flux.from(connectionFactory.create())
                 .flatMap { c ->
-                    c.createStatement(selectQuery)
+                    c.createStatement(query)
                             .bind(0, created)
                             .bind(1, device.name)
                             .bind(2, device.apiKey)
@@ -49,7 +48,6 @@ class DeviceRepository @Inject constructor(config: Config) : SentinelRepository(
                             .execute()
                 }
                 .flatMap { result ->
-                    println("Result: $result")
                     result.map { r, _ -> r.get("id", String::class.java)!!.toLong() } }
                 .doOnError { logger.error(it.message) }
                 .toMono()

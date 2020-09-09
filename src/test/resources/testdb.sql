@@ -62,7 +62,9 @@ VALUES ('ADMIN'), ('USER');
 
 INSERT INTO user(email, password, active, created, user_role_id)
 VALUES ('test@elek.bl', "", true, "2020-08-31 07:00:11", 1),
-('test@bela.bl', "", true, "2020-08-31 07:00:11", 2);
+('test@bela.bl', "", true, "2020-08-31 07:00:11", 2),
+('john@carm.ack', "", false, "2020-08-31 07:00:11", 2),
+('test@body.ru', "$2a$10$eG32Igu69L3EiOXKREHjqOU1tYUKY500zeSUqSJjIetlKF6jIZ9c6", true, "2020-08-31 07:00:11", 2);
 
 INSERT INTO session(session_id, created, expired_at, user_id)
 VALUES ('eyboss', "2020-08-31 07:00:11", "2020-07-31 07:00:11", 1),

@@ -1,5 +1,6 @@
 package space.sentinel.server.test.request.request
 
+import io.netty.handler.codec.http.cookie.Cookie
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.netty.ByteBufFlux
@@ -21,5 +22,12 @@ class PostRequester(builder: RequestBuilder) {
                 .send(ByteBufFlux.fromString(Flux.just(query)))
                 .response()
                 .map { it.status().code() }
+    }
+
+    fun cookies(query: String = ""): Mono<MutableMap<CharSequence, MutableSet<Cookie>>> {
+        return client
+                .send(ByteBufFlux.fromString(Flux.just(query)))
+                .response()
+                .map { it.cookies() }
     }
 }

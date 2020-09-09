@@ -2,6 +2,8 @@ package space.sentinel.controller
 
 import com.google.inject.Inject
 import io.netty.handler.codec.http.HttpResponseStatus
+import io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST
+import io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR
 import io.netty.handler.codec.http.cookie.Cookie
 import org.reactivestreams.Publisher
 import org.slf4j.Logger
@@ -11,6 +13,7 @@ import reactor.netty.http.server.HttpServerRequest
 import reactor.netty.http.server.HttpServerResponse
 import space.sentinel.api.UserProfile
 import space.sentinel.api.response.ServerErrorResponse
+import space.sentinel.exception.UnauthorizedException
 import space.sentinel.repository.ApiKeyRepository
 import space.sentinel.service.UserService
 import java.lang.IllegalArgumentException
@@ -36,14 +39,22 @@ abstract class SentinelController @Inject constructor(private val apiKeyReposito
     }
 
     protected fun withUserProfile(request: HttpServerRequest): Mono<UserProfile> {
+        return sessionFromRequest(request)
+                .flatMap { sessionId -> userService.userBySessionId(sessionId.get()) }
+                .switchIfEmpty(Mono.error(UnauthorizedException()))
+    }
+
+    protected fun withSessionId(request: HttpServerRequest): Mono<String> {
+        return sessionFromRequest(request)
+                .map { it.get() }
+                .switchIfEmpty(Mono.error(UnauthorizedException()))
+    }
+
+    private fun sessionFromRequest(request: HttpServerRequest): Mono<Optional<String>> {
         return Mono.fromCallable { request.cookies()["session_id"] }
                 .filter { !it.isNullOrEmpty<Cookie?>() }
                 .map<Optional<String>> { sessionId -> sessionId!!.stream().filter { it.name() == "session_id" }.map { it.value() }.findAny() }
                 .filter { it.isPresent }
-                .flatMap { sessionId ->
-                    userService.userBySessionId(sessionId.get())
-                }
-                .switchIfEmpty(Mono.error(IllegalArgumentException()))
     }
 
     protected fun unauthorized(response: HttpServerResponse) =
@@ -53,4 +64,18 @@ abstract class SentinelController @Inject constructor(private val apiKeyReposito
                     .then()
                     .doOnNext { logger.warn("Unauthorized attempt!") }
 
+
+    protected fun internalServerError(response: HttpServerResponse, resp: Mono<String>): Mono<Void> {
+        return response
+                .status(INTERNAL_SERVER_ERROR)
+                .sendString(resp)
+                .then()
+    }
+
+    protected fun badRequest(response: HttpServerResponse, resp: Mono<String>): Mono<Void> {
+        return response
+                .status(BAD_REQUEST)
+                .sendString(resp)
+                .then()
+    }
 }

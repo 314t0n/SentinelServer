@@ -8,7 +8,6 @@ class ApiKeyRepository @Inject constructor(config: Config){
     private val apiKey = config.getString("apiKey")
 
     fun isValid(key: String): Boolean {
-        println("$apiKey == $key, ${apiKey == key}")
         return apiKey == key
     }
 

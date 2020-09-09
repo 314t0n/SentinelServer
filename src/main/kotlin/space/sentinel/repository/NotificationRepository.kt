@@ -3,8 +3,6 @@ package space.sentinel.repository
 import com.google.inject.Inject
 import com.typesafe.config.Config
 import io.r2dbc.spi.Row
-import org.mariadb.r2dbc.MariadbConnectionConfiguration
-import org.mariadb.r2dbc.MariadbConnectionFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
@@ -12,7 +10,6 @@ import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toMono
 import space.sentinel.api.request.NotificationRequest
 import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
 
 
 class NotificationRepository @Inject constructor(
@@ -47,7 +44,7 @@ class NotificationRepository @Inject constructor(
                 .toMono()
     }
 
-    fun get(id: Long): Mono<Row> {
+    fun get(id: Long, userId: String): Mono<Row> {
         val selectQuery = "SELECT x.* FROM sentinel.notification x WHERE id=?"
 
         return Flux.from(connectionFactory.create())

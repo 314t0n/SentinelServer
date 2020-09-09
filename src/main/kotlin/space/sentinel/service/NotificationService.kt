@@ -7,15 +7,16 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import space.sentinel.api.EntityId
 import space.sentinel.api.Notification
+import space.sentinel.api.UserProfile
 import space.sentinel.api.request.NotificationRequest
 import space.sentinel.repository.NotificationRepository
 import space.sentinel.translator.NotificationTranslator
 import java.lang.IllegalArgumentException
 
 class NotificationService @Inject constructor(
-                                              private val paginationService: PaginationService,
-                                              private val notificationRepository: NotificationRepository,
-                                              private val notificationTranslator: NotificationTranslator) {
+        private val paginationService: PaginationService,
+        private val notificationRepository: NotificationRepository,
+        private val notificationTranslator: NotificationTranslator) {
 
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -24,7 +25,7 @@ class NotificationService @Inject constructor(
 
         return notificationRepository
                 .getAll(limit, offset)
-                .map {  notificationTranslator.translate(it) }
+                .map { notificationTranslator.translate(it) }
     }
 
     fun save(notificationRequest: NotificationRequest): Mono<EntityId> {
@@ -32,10 +33,10 @@ class NotificationService @Inject constructor(
                 .save(notificationRequest).map { EntityId(it) }
     }
 
-    fun get(id: String): Mono<Notification> {
-        return Mono.just(id).flatMap {
+    fun get(id: String, userProfile: Mono<UserProfile>): Mono<Notification> {
+        return userProfile.flatMap { user ->
             notificationRepository
-                    .get(id.toLong())
+                    .get(id.toLong(), user.id)
                     .map { row -> notificationTranslator.translate(row) }
                     .switchIfEmpty(Mono.error(IllegalArgumentException()))
                     .doOnError { logger.error(it.message, it) }

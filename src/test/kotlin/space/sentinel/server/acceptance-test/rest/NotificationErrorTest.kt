@@ -1,5 +1,9 @@
 package space.sentinel.server.`acceptance-test`.rest
 
+import com.jayway.jsonassert.impl.matcher.IsCollectionWithSize
+import com.jayway.jsonpath.matchers.JsonPathMatchers
+import org.hamcrest.CoreMatchers
+import org.hamcrest.MatcherAssert
 import org.junit.jupiter.api.Test
 import reactor.test.StepVerifier
 import space.sentinel.controller.NotificationController.Companion.CONTROLLER_PATH
@@ -56,4 +60,18 @@ class NotificationErrorTest : AcceptanceTest() {
                 .verifyComplete()
     }
 
+    @Test
+    fun `Unauthorized to read without login`() {
+        val request = GetRequestBuilder(baseUri)
+                .withApiKey()
+                .withQuery("/2")
+                .uri(CONTROLLER_PATH)
+
+        val response = GetRequester(request).statusCode()
+
+        StepVerifier
+                .create(response)
+                .expectNext(401)
+                .verifyComplete()
+    }
 }

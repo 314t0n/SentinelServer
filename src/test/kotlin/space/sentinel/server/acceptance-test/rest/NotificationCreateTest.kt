@@ -3,6 +3,7 @@ package space.sentinel.server.`acceptance-test`.rest
 import com.jayway.jsonpath.matchers.JsonPathMatchers
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
 import reactor.test.StepVerifier
 import space.sentinel.api.EntityId
@@ -86,8 +87,8 @@ class NotificationCreateTest : AcceptanceTest() {
         StepVerifier
                 .create(getResponse)
                 .expectNextMatches { json: String ->
-                    MatcherAssert.assertThat(json, JsonPathMatchers.isJson())
-                    MatcherAssert.assertThat(json, JsonPathMatchers.hasJsonPath("$.id", CoreMatchers.equalTo(entityId.id.toString())))
+                    assertThat(json, JsonPathMatchers.isJson())
+                    assertThat(json, JsonPathMatchers.hasJsonPath("$.id", CoreMatchers.equalTo(entityId.id.toString())))
                     true
                 }
                 .expectComplete()

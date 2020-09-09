@@ -1,8 +1,8 @@
 package space.sentinel.server.`acceptance-test`
 
 import space.sentinel.api.request.NotificationRequest
-import space.sentinel.api.response.NotificationResponse
 import space.sentinel.api.NotificationType
+import space.sentinel.api.request.LoginRequest
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.time.OffsetDateTime
@@ -52,6 +52,11 @@ class DomainObjects {
         val DeviceRequest = space.sentinel.api.request.DeviceRequest(
                 apiKey = "device123",
                 name = "raspberry123"
+        )
+
+        val ValidLoginRequest = LoginRequest(
+                email = "test@body.ru",
+                pass = LoginRequest.encodePassword("canihavehamburger?")
         )
     }
 }

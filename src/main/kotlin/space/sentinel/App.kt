@@ -7,7 +7,6 @@ import space.sentinel.server.SentinelServer
 import space.sentinel.server.modules.SentinelServerModule
 
 fun main(args: Array<String>) {
-
     System.setProperty("Dio.netty.tryReflectionSetAccessible", "true")
 
     val logger = LoggerFactory.getLogger("Sentinel")
@@ -19,7 +18,8 @@ fun main(args: Array<String>) {
                 .onDispose()
                 .doOnError { e -> logger.error(e.message, e) }
                 .block()
+
     } catch (ex: Exception) {
-        logger.error(ex.message)
+        logger.error(ex.message, ex)
     }
 }

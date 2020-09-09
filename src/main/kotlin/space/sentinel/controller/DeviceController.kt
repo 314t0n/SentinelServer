@@ -117,8 +117,6 @@ class DeviceController @Inject constructor(private val deviceService: DeviceServ
                 }
                 .doOnError { logger.error("Error while creating device: ${it.message}") }
                 .then()
-
-
     }
 
 }

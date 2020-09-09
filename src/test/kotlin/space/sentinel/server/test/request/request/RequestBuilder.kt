@@ -2,13 +2,13 @@ package space.sentinel.server.test.request.request
 
 import io.netty.handler.codec.http.cookie.DefaultCookie
 import reactor.netty.http.client.HttpClient
+import space.sentinel.controller.AuthenticationController.Companion.SESSION_ID
 import space.sentinel.controller.SentinelController
 
-abstract class RequestBuilder(private val baseUri: String) {
+sealed class RequestBuilder(private val baseUri: String) {
     protected var client: HttpClient = HttpClient.create()
     protected var uri: String = ""
     protected var query: String = ""
-    protected var receiver = null
 
     fun withApiKey(apiKey: String = "test"): RequestBuilder {
         client = client.headers { h -> h.set(SentinelController.API_KEY_HEADER, apiKey) }
@@ -16,7 +16,7 @@ abstract class RequestBuilder(private val baseUri: String) {
     }
 
     fun withAuth(sessionId: String = "eyboss"): RequestBuilder {
-        client = client.cookie(DefaultCookie("session_id", sessionId))
+        client = client.cookie(DefaultCookie(SESSION_ID, sessionId))
         return this
     }
 

@@ -3,18 +3,19 @@ package space.sentinel.controller
 import com.google.inject.Inject
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON
-import io.netty.handler.codec.http.HttpResponseStatus.*
+import io.netty.handler.codec.http.HttpResponseStatus.OK
+import io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import reactor.netty.http.server.HttpServerRequest
 import reactor.netty.http.server.HttpServerResponse
 import reactor.netty.http.server.HttpServerRoutes
+import space.sentinel.exception.UnauthorizedException
 import space.sentinel.repository.ApiKeyRepository
 import space.sentinel.service.UserService
 import space.sentinel.translator.UserProfileTranslator
 import space.sentinel.util.QueryParameterResolver
-import java.lang.IllegalArgumentException
 
 class UserProfileController @Inject constructor(private val userService: UserService,
                                                 private val translator: UserProfileTranslator,
@@ -56,52 +57,9 @@ class UserProfileController @Inject constructor(private val userService: UserSer
                             .status(UNAUTHORIZED)
                             .send()
                             .then()
+                }.onErrorResume(UnauthorizedException::class.java) {
+                    unauthorized(response)
                 }
     }
-
-//    private fun getAll(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
-//        val notifications = userService
-//                .getAll(queryParameterResolver.parameterMap(request))
-//                .collectList()
-//                .map { Notifications(it) }
-//                .map { translator.translate(it) }
-//                .doOnNext(::println)
-//
-//        return response
-//                .status(OK)
-//                .header(CONTENT_TYPE, APPLICATION_JSON)
-//                .sendString(notifications)
-//                .then()
-//    }
-//
-//    private fun post(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
-//        return request
-//                .receive()
-//                .aggregate()
-//                .asString()
-//                .map(translator::translateRequest)
-//                .map{ userService.save(it) }
-//                .flatMap {
-//                    val entityId = it.map { id -> translator.translateId(id) }
-//                    response
-//                            .status(CREATED)
-//                            .sendString(entityId)
-//                            .then()
-//                }
-//                .onErrorResume(JsonParseException::class.java) {
-//                    response
-//                            .status(BAD_REQUEST)
-//                            .sendString(translator.translateError(ServerErrorResponse.createErrorResponse(it)))
-//                            .then()
-//                }
-//                .onErrorResume(Exception::class.java) {
-//                    response
-//                            .status(INTERNAL_SERVER_ERROR)
-//                            .sendString(translator.translateError(ServerErrorResponse.createErrorResponse(it)))
-//                            .then()
-//                }
-//                .doOnError { logger.error("Error while saving notification: ${it.message}") }
-//                .then()
-//    }
 
 }
