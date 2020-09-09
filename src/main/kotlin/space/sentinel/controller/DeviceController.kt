@@ -14,6 +14,7 @@ import reactor.netty.http.server.HttpServerRoutes
 import space.sentinel.api.Devices
 import space.sentinel.api.response.ServerErrorResponse
 import space.sentinel.repository.ApiKeyRepository
+import space.sentinel.service.ApiKeyService
 import space.sentinel.service.DeviceService
 import space.sentinel.service.UserService
 import space.sentinel.translator.DeviceTranslator
@@ -24,7 +25,7 @@ class DeviceController @Inject constructor(private val deviceService: DeviceServ
                                            private val deviceTranslator: DeviceTranslator,
                                            private val queryParameterResolver: QueryParameterResolver,
                                            userService: UserService,
-                                           apiKeyRepository: ApiKeyRepository) : SentinelController(apiKeyRepository, userService) {
+                                           apiKeyService: ApiKeyService) : SentinelController(apiKeyService, userService) {
 
     companion object {
         const val CONTROLLER_PATH = "device"
@@ -35,13 +36,13 @@ class DeviceController @Inject constructor(private val deviceService: DeviceServ
     fun register(routes: HttpServerRoutes) {
         routes
                 .post("/$CONTROLLER_PATH") { request, response ->
-                    withValidApiKey(request, response) { post(request, response) }
+                    post(request, response)
                 }
                 .get("/$CONTROLLER_PATH") { request, response ->
-                    withValidApiKey(request, response) { getAll(request, response) }
+                    getAll(request, response)
                 }
                 .get("/$CONTROLLER_PATH/{id}") { request, response ->
-                    withValidApiKey(request, response) { get(request, response) }
+                    get(request, response)
                 }
     }
 
@@ -103,17 +104,11 @@ class DeviceController @Inject constructor(private val deviceService: DeviceServ
                 }
                 .onErrorResume(JsonParseException::class.java) {
                     logger.warn("Error while creating device: ${it.message}")
-                    response
-                            .status(BAD_REQUEST)
-                            .sendString(deviceTranslator.translateError(ServerErrorResponse.createErrorResponse(it)))
-                            .then()
+                    badRequest(response, deviceTranslator.translateError(ServerErrorResponse.createErrorResponse(it)))
                 }
                 .onErrorResume(Exception::class.java) {
                     logger.error("Error while creating device: ${it.message}", it)
-                    response
-                            .status(INTERNAL_SERVER_ERROR)
-                            .sendString(deviceTranslator.translateError(ServerErrorResponse.createErrorResponse(it)))
-                            .then()
+                    internalServerError(response, deviceTranslator.translateError(ServerErrorResponse.createErrorResponse(it)))
                 }
                 .doOnError { logger.error("Error while creating device: ${it.message}") }
                 .then()

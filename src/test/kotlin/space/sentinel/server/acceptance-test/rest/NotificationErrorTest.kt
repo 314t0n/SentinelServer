@@ -32,7 +32,7 @@ class NotificationErrorTest : AcceptanceTest() {
     }
 
     @Test
-    fun `Unauthorized with wrong Api Key`() {
+    fun `POST Unauthorized with wrong Api Key`() {
         val request = PostRequestBuilder(baseUri)
                 .withApiKey("invalid")
                 .uri(CONTROLLER_PATH)
@@ -47,7 +47,7 @@ class NotificationErrorTest : AcceptanceTest() {
     }
 
     @Test
-    fun `Unauthorized without Api Key`() {
+    fun `POST Unauthorized without Api Key`() {
         val request = PostRequestBuilder(baseUri)
                 .uri(CONTROLLER_PATH)
 

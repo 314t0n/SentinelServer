@@ -14,7 +14,7 @@ import reactor.netty.http.server.HttpServerRoutes
 import space.sentinel.api.Notifications
 import space.sentinel.api.response.ServerErrorResponse
 import space.sentinel.exception.UnauthorizedException
-import space.sentinel.repository.ApiKeyRepository
+import space.sentinel.service.ApiKeyService
 import space.sentinel.service.NotificationService
 import space.sentinel.service.UserService
 import space.sentinel.translator.NotificationTranslator
@@ -25,7 +25,7 @@ class NotificationController @Inject constructor(private val notificationService
                                                  private val translator: NotificationTranslator,
                                                  private val queryParameterResolver: QueryParameterResolver,
                                                  userService: UserService,
-                                                 apiKeyRepository: ApiKeyRepository) : SentinelController(apiKeyRepository, userService) {
+                                                 apiKeyService: ApiKeyService) : SentinelController(apiKeyService, userService) {
 
     companion object {
         const val CONTROLLER_PATH = "notification"
@@ -36,13 +36,13 @@ class NotificationController @Inject constructor(private val notificationService
     fun register(routes: HttpServerRoutes) {
         routes
                 .post("/$CONTROLLER_PATH") { request, response ->
-                    withValidApiKey(request, response) { post(request, response) }
+                    post(request, response)
                 }
                 .get("/$CONTROLLER_PATH") { request, response ->
-                    withValidApiKey(request, response) { getAll(request, response) }
+                    getAll(request, response)
                 }
                 .get("/${CONTROLLER_PATH}/{id}") { request, response ->
-                    withValidApiKey(request, response) { get(request, response) }
+                    get(request, response)
                 }
     }
 
@@ -85,12 +85,15 @@ class NotificationController @Inject constructor(private val notificationService
     }
 
     private fun post(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
-        return request
+        val notification = request
                 .receive()
                 .aggregate()
                 .asString()
                 .map(translator::translateRequest)
-                .map { notificationService.save(it) }
+
+        return deviceByApiKey(request)
+                .zipWith(notification)
+                .map { notificationService.save(it.t2, it.t1) }
                 .flatMap {
                     val entityId = it.map { id -> translator.translateId(id) }
                     response
@@ -99,16 +102,15 @@ class NotificationController @Inject constructor(private val notificationService
                             .then()
                 }
                 .onErrorResume(JsonParseException::class.java) {
-                    response
-                            .status(BAD_REQUEST)
-                            .sendString(translator.translateError(ServerErrorResponse.createErrorResponse(it)))
-                            .then()
+                    logger.warn(it.message)
+                    badRequest(response, translator.translateError(ServerErrorResponse.createErrorResponse(it)))
+                }
+                .onErrorResume(UnauthorizedException::class.java) {
+                    unauthorized(response)
                 }
                 .onErrorResume(Exception::class.java) {
-                    response
-                            .status(INTERNAL_SERVER_ERROR)
-                            .sendString(translator.translateError(ServerErrorResponse.createErrorResponse(it)))
-                            .then()
+                    logger.error(it.message, it)
+                    internalServerError(response, translator.translateError(ServerErrorResponse.createErrorResponse(it)))
                 }
                 .doOnError { logger.error("Error while saving notification: ${it.message}") }
                 .then()

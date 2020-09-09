@@ -16,6 +16,11 @@ import space.sentinel.controller.*
  * HTTP Server setup
  */
 class SentinelServer() {
+
+    /**
+     * Starts a HTTP server that listens on a port defined in the configuration file
+     * Register controller routes
+     */
     fun create(injector: Injector): DisposableServer {
         return HttpServer.create()
                 .tcpConfiguration { tcpServer ->

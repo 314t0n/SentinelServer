@@ -10,7 +10,7 @@ sealed class RequestBuilder(private val baseUri: String) {
     protected var uri: String = ""
     protected var query: String = ""
 
-    fun withApiKey(apiKey: String = "test"): RequestBuilder {
+    fun withApiKey(apiKey: String = "test1"): RequestBuilder {
         client = client.headers { h -> h.set(SentinelController.API_KEY_HEADER, apiKey) }
         return this
     }

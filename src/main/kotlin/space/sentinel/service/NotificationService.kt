@@ -5,6 +5,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import space.sentinel.api.Device
 import space.sentinel.api.EntityId
 import space.sentinel.api.Notification
 import space.sentinel.api.UserProfile
@@ -28,9 +29,10 @@ class NotificationService @Inject constructor(
                 .map { notificationTranslator.translate(it) }
     }
 
-    fun save(notificationRequest: NotificationRequest): Mono<EntityId> {
+    fun save(notificationRequest: NotificationRequest, device: Device): Mono<EntityId> {
         return notificationRepository
-                .save(notificationRequest).map { EntityId(it) }
+                .save(notificationRequest, device.id)
+                .map { EntityId(it) }
     }
 
     fun get(id: String, userProfile: Mono<UserProfile>): Mono<Notification> {

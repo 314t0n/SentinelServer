@@ -11,7 +11,6 @@ import reactor.kotlin.core.publisher.toMono
 import space.sentinel.api.request.NotificationRequest
 import java.time.OffsetDateTime
 
-
 class NotificationRepository @Inject constructor(
         config: Config) : SentinelRepository(config) {
 
@@ -25,7 +24,16 @@ class NotificationRepository @Inject constructor(
                 .flatMap { result -> result.map { row, _ -> row } }
     }
 
-    fun save(notificationRequest: NotificationRequest): Mono<Long> {
+    fun get(id: Long, userId: String): Mono<Row> {
+        val selectQuery = "SELECT x.* FROM sentinel.notification x WHERE id=?"
+
+        return Flux.from(connectionFactory.create())
+                .flatMap { c -> c.createStatement(selectQuery).bind(0, id).execute() }
+                .flatMap { result -> result.map { row, _ -> row } }
+                .toMono()
+    }
+
+    fun save(notificationRequest: NotificationRequest, deviceId: String): Mono<Long> {
         val created = timestampFormat(OffsetDateTime.now())
         val selectQuery = "INSERT INTO notification(created, message, device_id, notification_type) VALUES (?, ?, ?, ?)"
 
@@ -34,22 +42,13 @@ class NotificationRepository @Inject constructor(
                     c.createStatement(selectQuery)
                             .bind(0, created)
                             .bind(1, notificationRequest.message)
-                            .bind(2, notificationRequest.deviceId)
+                            .bind(2, deviceId)
                             .bind(3, notificationRequest.type.id)
                             .returnGeneratedValues("id")
                             .execute()
                 }
                 .flatMap { result -> result.map { row, _ -> row.get("id", String::class.java)!!.toLong() } }
                 .doOnError { logger.error(it.message) }
-                .toMono()
-    }
-
-    fun get(id: Long, userId: String): Mono<Row> {
-        val selectQuery = "SELECT x.* FROM sentinel.notification x WHERE id=?"
-
-        return Flux.from(connectionFactory.create())
-                .flatMap { c -> c.createStatement(selectQuery).bind(0, id).execute() }
-                .flatMap { result -> result.map { row, _ -> row } }
                 .toMono()
     }
 

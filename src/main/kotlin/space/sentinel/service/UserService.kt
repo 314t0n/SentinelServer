@@ -9,29 +9,16 @@ import space.sentinel.api.EntityId
 import space.sentinel.api.Notification
 import space.sentinel.api.UserProfile
 import space.sentinel.api.request.NotificationRequest
+import space.sentinel.exception.UnauthorizedException
 import space.sentinel.repository.UserRepository
 import space.sentinel.translator.UserProfileTranslator
 import java.lang.IllegalArgumentException
 
 class UserService @Inject constructor(
-        private val paginationService: PaginationService,
         private val userRepository: UserRepository,
         private val userProfileTranslator: UserProfileTranslator) {
 
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
-
-//    fun getAll(params: Map<String, String>): Flux<Notification> {
-//        val (limit, offset) = paginationService.pagination(params)
-//
-//        return userRepository
-//                .getAll(limit, offset)
-//                .map { userProfileTranslator.translate(it) }
-//    }
-
-    fun save(notificationRequest: NotificationRequest): Mono<EntityId> {
-        return userRepository
-                .save(notificationRequest).map { EntityId(it) }
-    }
 
     fun get(id: String): Mono<UserProfile> {
         return Mono.just(id).flatMap {
@@ -46,7 +33,7 @@ class UserService @Inject constructor(
     fun userBySessionId(sessionId: String): Mono<UserProfile> {
         return userRepository
                 .findBySessionId(sessionId).map { row -> userProfileTranslator.translate(row) }
-                .switchIfEmpty(Mono.error(IllegalArgumentException()))
+                .switchIfEmpty(Mono.error(UnauthorizedException("Session id invalid: $sessionId")))
                 .doOnError { logger.error(it.message, it) }
     }
 

@@ -14,6 +14,7 @@ import space.sentinel.api.UserSession
 import space.sentinel.api.response.ServerErrorResponse.Companion.createErrorResponse
 import space.sentinel.exception.UnauthorizedException
 import space.sentinel.repository.ApiKeyRepository
+import space.sentinel.service.ApiKeyService
 import space.sentinel.service.AuthService
 import space.sentinel.service.UserService
 import space.sentinel.translator.LoginTranslator
@@ -22,7 +23,7 @@ import space.sentinel.util.QueryParameterResolver
 class AuthenticationController @Inject constructor(private val authService: AuthService,
                                                    private val translator: LoginTranslator,
                                                    userService: UserService,
-                                                   apiKeyRepository: ApiKeyRepository) : SentinelController(apiKeyRepository, userService) {
+                                                   apiKeyService: ApiKeyService) : SentinelController(apiKeyService, userService) {
 
     companion object {
         const val CONTROLLER_LOGIN = "auth/login"
@@ -71,7 +72,8 @@ class AuthenticationController @Inject constructor(private val authService: Auth
     }
 
     private fun logout(request: HttpServerRequest, response: HttpServerResponse): Mono<Void> {
-        return withSessionId(request)
+        return withUserProfile(request)
+                .flatMap { withSessionId(request) }
                 .map(authService::logout)
                 .flatMap {
                     response

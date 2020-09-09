@@ -27,7 +27,6 @@ class DomainObjects {
         val AlertNotificationWithImage = NotificationRequest(
                 ATimeStamp,
                 "id1",
-                1,
                 "motion detected",
                 NotificationType.ALERT,
                 Optional.of(readImage()))
@@ -35,7 +34,6 @@ class DomainObjects {
         val AlertNotificationWithoutImage = NotificationRequest(
                 ATimeStamp,
                 "id1",
-                1,
                 "device disconnected",
                 NotificationType.ALERT,
                 Optional.empty())
@@ -43,7 +41,6 @@ class DomainObjects {
         val InfoNotification = NotificationRequest(
                 ATimeStamp,
                 "id2",
-                2,
                 "initialized",
                 NotificationType.INFO,
                 Optional.empty())

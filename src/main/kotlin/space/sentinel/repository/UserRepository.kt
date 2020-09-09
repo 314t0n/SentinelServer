@@ -22,34 +22,6 @@ class UserRepository @Inject constructor(
 
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun getAll(limit: Long, offset: Long): Flux<Row> {
-        val selectQuery = "SELECT x.* FROM sentinel.user x ORDER BY x.created DESC LIMIT ?,?"
-
-        return Flux.from(connectionFactory.create())
-                .flatMap { c -> c.createStatement(selectQuery).bind(0, limit).bind(1, offset).execute() }
-                .flatMap { result -> result.map { row, _ -> row } }
-    }
-
-    fun save(notificationRequest: NotificationRequest): Mono<Long> {
-        throw RuntimeException("TODO")
-        val created = timestampFormat(OffsetDateTime.now())
-        val selectQuery = "INSERT INTO notification(created, message, device_id, notification_type) VALUES (?, ?, ?, ?)"
-
-        return Flux.from(connectionFactory.create())
-                .flatMap { c ->
-                    c.createStatement(selectQuery)
-                            .bind(0, created)
-                            .bind(1, notificationRequest.message)
-                            .bind(2, notificationRequest.deviceId)
-                            .bind(3, notificationRequest.type.id)
-                            .returnGeneratedValues("id")
-                            .execute()
-                }
-                .flatMap { result -> result.map { row, _ -> row.get("id", String::class.java)!!.toLong() } }
-                .doOnError { logger.error(it.message) }
-                .toMono()
-    }
-
     fun get(id: Long): Mono<Row> {
         val selectQuery = "SELECT x.* FROM sentinel.user x WHERE id=?"
 
@@ -81,11 +53,6 @@ class UserRepository @Inject constructor(
                 .toMono()
     }
 
-    /**
-     * INSERT INTO session(session_id, created, expired_at, user_id)
-    VALUES ('eyboss', "2020-08-31 07:00:11", "2020-07-31 07:00:11", 1),
-    ('eyboss123', "2020-08-31 07:00:11", "2025-08-31 07:00:11", 2);
-     */
     fun saveSessionId(userProfile: UserProfile, sessionId: String): Mono<UserSession> {
         val current = OffsetDateTime.now()
         val exp = current.plusDays(1)

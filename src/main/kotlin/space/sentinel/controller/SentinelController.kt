@@ -5,21 +5,19 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST
 import io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR
 import io.netty.handler.codec.http.cookie.Cookie
-import org.reactivestreams.Publisher
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import reactor.netty.http.server.HttpServerRequest
 import reactor.netty.http.server.HttpServerResponse
+import space.sentinel.api.Device
 import space.sentinel.api.UserProfile
-import space.sentinel.api.response.ServerErrorResponse
 import space.sentinel.exception.UnauthorizedException
-import space.sentinel.repository.ApiKeyRepository
+import space.sentinel.service.ApiKeyService
 import space.sentinel.service.UserService
-import java.lang.IllegalArgumentException
 import java.util.*
 
-abstract class SentinelController @Inject constructor(private val apiKeyRepository: ApiKeyRepository,
+abstract class SentinelController @Inject constructor(private val apiKeyService: ApiKeyService,
                                                       private val userService: UserService) {
 
     companion object {
@@ -28,22 +26,30 @@ abstract class SentinelController @Inject constructor(private val apiKeyReposito
 
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    protected fun withValidApiKey(request: HttpServerRequest, response: HttpServerResponse, requestHandler: () -> Mono<Void>): Publisher<Void> {
+    /**
+     * Returns Device by given API key
+     *
+     * @param request
+     * @param response
+     * @exception UnauthorizedException if api key not found or not provided
+     */
+    protected fun deviceByApiKey(request: HttpServerRequest): Mono<Device> {
         val apiKey = Optional.ofNullable(request.requestHeaders().get(API_KEY_HEADER))
-
-        return if (apiKey.isPresent && apiKeyRepository.isValid(apiKey.get())) {
-            requestHandler()
-        } else {
-            unauthorized(response)
-        }
+        return apiKeyService.deviceByApiKey(apiKey).doOnError { logger.warn(it.message) }
     }
 
+    /**
+     * Returns user profile from database, TODO move
+     */
     protected fun withUserProfile(request: HttpServerRequest): Mono<UserProfile> {
         return sessionFromRequest(request)
                 .flatMap { sessionId -> userService.userBySessionId(sessionId.get()) }
                 .switchIfEmpty(Mono.error(UnauthorizedException()))
     }
 
+    /**
+     * Returns user session from request, TODO move
+     */
     protected fun withSessionId(request: HttpServerRequest): Mono<String> {
         return sessionFromRequest(request)
                 .map { it.get() }
@@ -57,14 +63,19 @@ abstract class SentinelController @Inject constructor(private val apiKeyReposito
                 .filter { it.isPresent }
     }
 
-    protected fun unauthorized(response: HttpServerResponse) =
+    /**
+     * Returns HTTP Status Code 401
+     */
+    protected fun unauthorized(response: HttpServerResponse): Mono<Void> =
             response
                     .status(HttpResponseStatus.UNAUTHORIZED)
                     .sendString(Mono.just("unauthorized"))
                     .then()
                     .doOnNext { logger.warn("Unauthorized attempt!") }
 
-
+    /**
+     * Returns HTTP Status Code 500 with error message
+     */
     protected fun internalServerError(response: HttpServerResponse, resp: Mono<String>): Mono<Void> {
         return response
                 .status(INTERNAL_SERVER_ERROR)
@@ -72,6 +83,9 @@ abstract class SentinelController @Inject constructor(private val apiKeyReposito
                 .then()
     }
 
+    /**
+     * Returns HTTP Status Code 400 with error message
+     */
     protected fun badRequest(response: HttpServerResponse, resp: Mono<String>): Mono<Void> {
         return response
                 .status(BAD_REQUEST)

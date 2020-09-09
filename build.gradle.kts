@@ -10,6 +10,7 @@ plugins {
     kotlin("jvm") version "1.3.40"
     `maven-publish`
     id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("org.jetbrains.dokka") version "1.4.0"
 }
 
 application {

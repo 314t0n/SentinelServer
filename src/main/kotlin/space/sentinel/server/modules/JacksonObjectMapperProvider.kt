@@ -15,6 +15,5 @@ class JacksonObjectMapperProvider : Provider<ObjectMapper> {
                 .registerModule(JavaTimeModule())
                 .registerModule(Jdk8Module())
                 .registerModule(ParameterNamesModule())
-
     }
 }

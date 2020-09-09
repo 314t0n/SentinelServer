@@ -22,6 +22,12 @@ class AuthService @Inject constructor(
 
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
+    /**
+     * Finds user by email and compare the encrypted password from the db to the provided one
+     *
+     * @param loginRequest email/pass for user
+     * @exception UnauthorizedException if user not found by email or passwords not matching
+     */
     fun login(loginRequest: LoginRequest): Mono<UserSession> {
         val email = loginRequest.email
         val password = loginRequest.decodedPassword()
@@ -45,8 +51,15 @@ class AuthService @Inject constructor(
                 .switchIfEmpty(Mono.error(UnauthorizedException("Email: $email")))
     }
 
+    /**
+     * Removes session_id from the database
+     *
+     * @param sessionId valid session id
+     * @exception UnauthorizedException if session id not found in database, although session id must be validated before calling this method
+     */
     fun logout(sessionId: String): Mono<Int> {
         return userRepository.removeSession(sessionId)
+                .doOnEach{ logger.info(it.toString())}
                 .filter { it > 0 }
                 .switchIfEmpty(Mono.error(UnauthorizedException("SessionId not found: $sessionId")))
                 .doOnError { logger.error(it.message, it) }

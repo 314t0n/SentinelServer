@@ -12,15 +12,14 @@ import reactor.netty.http.server.HttpServerRequest
 import reactor.netty.http.server.HttpServerResponse
 import reactor.netty.http.server.HttpServerRoutes
 import space.sentinel.exception.UnauthorizedException
-import space.sentinel.repository.ApiKeyRepository
+import space.sentinel.service.ApiKeyService
 import space.sentinel.service.UserService
 import space.sentinel.translator.UserProfileTranslator
 import space.sentinel.util.QueryParameterResolver
 
-class UserProfileController @Inject constructor(private val userService: UserService,
-                                                private val translator: UserProfileTranslator,
-                                                private val queryParameterResolver: QueryParameterResolver,
-                                                apiKeyRepository: ApiKeyRepository) : SentinelController(apiKeyRepository, userService) {
+class UserProfileController @Inject constructor(private val translator: UserProfileTranslator,
+                                                userService: UserService,
+                                                apiKeyService: ApiKeyService) : SentinelController(apiKeyService, userService) {
 
     companion object {
         const val CONTROLLER_PATH = "user"
@@ -30,12 +29,6 @@ class UserProfileController @Inject constructor(private val userService: UserSer
 
     fun register(routes: HttpServerRoutes) {
         routes
-//                .post("/$CONTROLLER_PATH") { request, response ->
-//                    withValidApiKey(request, response) { post(request, response) }
-//                }
-//                .get("/$CONTROLLER_PATH") { request, response ->
-//                    withValidApiKey(request, response) { getAll(request, response) }
-//                }
                 .get("/${CONTROLLER_PATH}/{id}") { request, response -> get(request, response) }
     }
 
